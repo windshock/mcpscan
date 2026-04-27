@@ -1,0 +1,25 @@
+{
+  "id": "langflow",
+  "name": "LangFlow",
+  "source_url": "https://github.com/langflow-ai/langflow",
+  "launch": {
+    "kind": "docker_image",
+    "image": "langflowai/langflow:1.8.3",
+    "ports": [
+      {
+        "host": 37860,
+        "container": 7860
+      }
+    ],
+    "pull": true
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:37860/",
+    "acceptable_statuses": [200, 302, 307, 404],
+    "startup_timeout_sec": 240
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "LangFlow"
+  }
+}

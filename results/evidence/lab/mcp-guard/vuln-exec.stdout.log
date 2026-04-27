@@ -1,0 +1,34 @@
+{
+  "target": "/servers/vuln-exec",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "command_exec",
+    "tool_poisoning"
+  ],
+  "verdicts": [
+    {
+      "pattern": "command_exec",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "subprocess.run"
+    },
+    {
+      "pattern": "tool_poisoning",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "IMPORTANT:"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "command_exec",
+      "recommendation": "Remove direct command execution. Use allowlisted operations only."
+    },
+    {
+      "pattern": "tool_poisoning",
+      "recommendation": "Remove hidden instructions from tool descriptions. Keep descriptions factual."
+    }
+  ]
+}

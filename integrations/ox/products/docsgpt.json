@@ -1,0 +1,40 @@
+{
+  "id": "docsgpt",
+  "name": "DocsGPT",
+  "source_url": "https://github.com/arc53/DocsGPT",
+  "launch": {
+    "kind": "repo_compose",
+    "repo_url": "https://github.com/arc53/DocsGPT.git",
+    "ref": "72b3d944534244baed4727824f30c55bc3d82495",
+    "compose_file": "deployment/docker-compose.yaml",
+    "project_name": "mcpscan-ox-docsgpt",
+    "write_files": {
+      ".env": "VITE_API_STREAMING=true\nVITE_GOOGLE_CLIENT_ID=\n"
+    },
+    "compose_overrides": {
+      "services": {
+        "frontend": {
+          "ports": ["35173:5173"]
+        },
+        "backend": {
+          "ports": ["37091:7091"]
+        },
+        "redis": {
+          "ports": []
+        },
+        "postgres": {
+          "ports": []
+        }
+      }
+    }
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:35173/",
+    "acceptable_statuses": [200, 302, 404],
+    "startup_timeout_sec": 600
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "DocsGPT"
+  }
+}

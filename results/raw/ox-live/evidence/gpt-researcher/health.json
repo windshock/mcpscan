@@ -1,0 +1,16 @@
+{
+  "status": "reachable",
+  "url": "http://127.0.0.1:38000/",
+  "http_status": 200,
+  "probe": {
+    "reachable": true,
+    "status": 200,
+    "headers": {
+      "date": "Fri, 24 Apr 2026 01:33:51 GMT",
+      "server": "uvicorn",
+      "content-length": "23371",
+      "content-type": "text/html; charset=utf-8",
+      "Connection": "close"
+    }
+  }
+}

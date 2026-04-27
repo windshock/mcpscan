@@ -1,0 +1,18 @@
+{
+  "target": "normal-tricky",
+  "scanner_name": "cisco-scanner",
+  "timestamp": "2026-04-22T23:17:36.722046+00:00",
+  "status": "skipped",
+  "error": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
+  "expected_findings": [],
+  "detected_findings": [],
+  "true_positives": [],
+  "missed_findings": [],
+  "false_positives": [],
+  "policy_verdict": null,
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "/servers/normal-tricky",
+  "exit_code": null
+}

@@ -1,0 +1,38 @@
+{
+  "target": "windsurf",
+  "target_type": "ox_live",
+  "product_name": "Windsurf",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-22T23:22:39.743961+00:00",
+  "source_url": "https://windsurf.com/",
+  "launch_kind": "manual_blocked",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "manual_blocked",
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": false,
+  "launch_matches_expectation": true,
+  "expected_health_status": null,
+  "health_matches_expectation": null,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [
+    "manual_blocked: Windsurf Editor does not expose a public self-hosted Docker launch path"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/windsurf/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/windsurf/scan.stderr"
+  }
+}

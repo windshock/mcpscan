@@ -1,0 +1,187 @@
+[
+  {
+    "name": "LangFlow",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "langflow_attack": {
+          "command": "id",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "LiteLLM",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "litellm_attack": {
+          "command": "bash",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "Flowise",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "flowise_attack": {
+          "command": "npx",
+          "args": ["-c", "touch /tmp/pwn"],
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution", "allowlist_bypass"]
+  },
+  {
+    "name": "DocsGPT",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "docsgpt_attack": {
+          "command": "sh",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "Upsonic",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "upsonic_attack": {
+          "command": "git",
+          "args": ["-c", "core.pager=touch /tmp/pwn"],
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution", "allowlist_bypass"]
+  },
+  {
+    "name": "GPT-Researcher",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "gpt_researcher_attack": {
+          "command": "python",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "LettaAI",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "letta_attack": {
+          "command": "whoami",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "Windsurf",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "windsurf_prompt_injected": {
+          "command": "osascript",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "LangChain ChatChat",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "chatchat_attack": {
+          "command": "python3",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "Agent Zero",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "agent_zero_attack": {
+          "command": "bash",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "Jaaz",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "jaaz_attack": {
+          "command": "cmd",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "BISHENG",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "bisheng_attack": {
+          "command": "python",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "OpenHands",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "openhands_attack": {
+          "command": "node",
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution"]
+  },
+  {
+    "name": "PromptFoo",
+    "source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/",
+    "payload": {
+      "mcpServers": {
+        "promptfoo_attack": {
+          "command": "python",
+          "args": ["-c", "print('pwned')"],
+          "transport": "stdio"
+        }
+      }
+    },
+    "expected_findings": ["config_to_execution", "allowlist_bypass"]
+  }
+]

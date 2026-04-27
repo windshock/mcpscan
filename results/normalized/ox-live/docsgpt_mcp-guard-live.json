@@ -1,0 +1,38 @@
+{
+  "target": "docsgpt",
+  "target_type": "ox_live",
+  "product_name": "DocsGPT",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-24T02:46:44.775863+00:00",
+  "source_url": "https://github.com/arc53/DocsGPT",
+  "launch_kind": "repo_compose",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "command_failed",
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": true,
+  "launch_matches_expectation": false,
+  "expected_health_status": "reachable",
+  "health_matches_expectation": false,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [
+    "fatal: reference is not a tree: 72b3d944534244baed4727824f30c55bc3d82495"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/docsgpt/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/docsgpt/scan.stderr"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "litellm",
+  "name": "LiteLLM",
+  "source_url": "https://github.com/BerriAI/litellm",
+  "launch": {
+    "kind": "docker_image",
+    "image": "ghcr.io/berriai/litellm:v1.82.3-stable.patch.2",
+    "ports": [
+      {
+        "host": 34000,
+        "container": 4000
+      }
+    ],
+    "args": ["--port", "4000"],
+    "pull": true
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:34000/health/liveliness",
+    "acceptable_statuses": [200, 404],
+    "startup_timeout_sec": 240
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "LiteLLM"
+  }
+}

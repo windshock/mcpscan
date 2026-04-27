@@ -1,0 +1,67 @@
+{
+  "target": "/servers/vuln-authless",
+  "risk": "HIGH",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "tool_poisoning",
+    "unrestricted_file_read",
+    "env_exposure",
+    "tool_poisoning",
+    "tool_poisoning"
+  ],
+  "verdicts": [
+    {
+      "pattern": "tool_poisoning",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "IMPORTANT:"
+    },
+    {
+      "pattern": "unrestricted_file_read",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "open(path"
+    },
+    {
+      "pattern": "env_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "dict(os.environ)"
+    },
+    {
+      "pattern": "tool_poisoning",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "IGNORE ANY PREVIOUS"
+    },
+    {
+      "pattern": "tool_poisoning",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "NOTE TO ASSISTANT:"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "tool_poisoning",
+      "recommendation": "Remove hidden instructions from tool descriptions. Keep descriptions factual."
+    },
+    {
+      "pattern": "unrestricted_file_read",
+      "recommendation": "Restrict file access to allowlisted directories. Validate paths against traversal."
+    },
+    {
+      "pattern": "env_exposure",
+      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+    },
+    {
+      "pattern": "tool_poisoning",
+      "recommendation": "Remove hidden instructions from tool descriptions. Keep descriptions factual."
+    },
+    {
+      "pattern": "tool_poisoning",
+      "recommendation": "Remove hidden instructions from tool descriptions. Keep descriptions factual."
+    }
+  ]
+}

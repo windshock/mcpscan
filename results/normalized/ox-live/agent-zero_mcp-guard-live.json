@@ -1,0 +1,50 @@
+{
+  "target": "agent-zero",
+  "target_type": "ox_live",
+  "product_name": "Agent Zero",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-24T02:44:02.260133+00:00",
+  "source_url": "https://github.com/frdel/agent-zero",
+  "launch_kind": "docker_image",
+  "launch_status": "success",
+  "health_status": "reachable",
+  "scan_status": "success",
+  "failure_reason": null,
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": true,
+  "launch_matches_expectation": true,
+  "expected_health_status": "reachable",
+  "health_matches_expectation": true,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [],
+  "evidence": {
+    "launch_command": [
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      "mcpscan-ox-agent-zero",
+      "--label",
+      "mcpscan.ox-live=true",
+      "-p",
+      "38090:80",
+      "agent0ai/agent-zero:v1.7"
+    ],
+    "health": "results/raw/ox-live/evidence/agent-zero/health.json",
+    "launch_logs": "results/raw/ox-live/evidence/agent-zero/launch.log",
+    "scan_stdout": "results/raw/ox-live/evidence/agent-zero/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/agent-zero/scan.stderr"
+  }
+}

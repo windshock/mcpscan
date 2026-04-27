@@ -1,0 +1,43 @@
+{
+  "target_type": "ox_live",
+  "product_id": "letta-ai",
+  "product_name": "LettaAI",
+  "source_url": "https://github.com/letta-ai/letta",
+  "timestamp": "2026-04-24T02:48:43.324220+00:00",
+  "launch_kind": "repo_compose",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "command_failed",
+  "notes": [
+    "error: pathspec '0.16.7' did not match any file(s) known to git"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/letta-ai/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/letta-ai/scan.stderr"
+  },
+  "scan_mode": "config_fixture",
+  "scan_result": {
+    "target": "config_json",
+    "risk": "CRITICAL",
+    "policy_verdict": "BLOCK",
+    "environment": "production",
+    "findings": [
+      "config_to_execution"
+    ],
+    "verdicts": [
+      {
+        "pattern": "config_to_execution",
+        "severity": "CRITICAL",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.letta_attack.command = whoami"
+      }
+    ],
+    "recommendations": [
+      {
+        "pattern": "config_to_execution",
+        "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+      }
+    ]
+  }
+}

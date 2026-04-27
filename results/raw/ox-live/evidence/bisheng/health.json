@@ -1,0 +1,23 @@
+{
+  "status": "reachable",
+  "url": "http://127.0.0.1:39001/",
+  "http_status": 200,
+  "probe": {
+    "reachable": true,
+    "status": 200,
+    "headers": {
+      "Server": "nginx/1.29.6",
+      "Date": "Wed, 22 Apr 2026 23:35:24 GMT",
+      "Content-Type": "text/html",
+      "Content-Length": "2331",
+      "Last-Modified": "Wed, 11 Mar 2026 02:38:08 GMT",
+      "Connection": "close",
+      "Vary": "Accept-Encoding",
+      "ETag": "\"69b0d590-91b\"",
+      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      "Pragma": "no-cache",
+      "Expires": "0",
+      "Accept-Ranges": "bytes"
+    }
+  }
+}

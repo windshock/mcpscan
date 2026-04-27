@@ -1,0 +1,18 @@
+{
+  "id": "windsurf",
+  "name": "Windsurf",
+  "source_url": "https://windsurf.com/",
+  "launch": {
+    "kind": "manual_blocked",
+    "reason": "manual_blocked: Windsurf Editor does not expose a public self-hosted Docker launch path"
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:0/",
+    "acceptable_statuses": [200],
+    "startup_timeout_sec": 1
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "Windsurf"
+  }
+}

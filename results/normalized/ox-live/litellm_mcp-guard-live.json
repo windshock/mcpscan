@@ -1,0 +1,38 @@
+{
+  "target": "litellm",
+  "target_type": "ox_live",
+  "product_name": "LiteLLM",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-22T23:22:10.906383+00:00",
+  "source_url": "https://github.com/BerriAI/litellm",
+  "launch_kind": "docker_image",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "command_failed",
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": true,
+  "launch_matches_expectation": false,
+  "expected_health_status": "reachable",
+  "health_matches_expectation": false,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [
+    "write /var/lib/docker/tmp/GetImageBlob2755048035: no space left on device"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/litellm/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/litellm/scan.stderr"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "target": "vuln-exec",
+  "scanner_name": "cisco-scanner",
+  "timestamp": "2026-04-22T23:17:36.723437+00:00",
+  "status": "skipped",
+  "error": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
+  "expected_findings": [
+    "command_exec",
+    "tool_poisoning"
+  ],
+  "detected_findings": [],
+  "true_positives": [],
+  "missed_findings": [
+    "command_exec",
+    "tool_poisoning"
+  ],
+  "false_positives": [],
+  "policy_verdict": null,
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "/servers/vuln-exec",
+  "exit_code": null
+}

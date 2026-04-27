@@ -1,0 +1,16 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y git docker.io docker-compose && rm -rf /var/lib/apt/lists/*
+
+COPY guard/ ./guard-src/
+RUN pip install --no-cache-dir ./guard-src
+
+COPY runner/ ./runner/
+COPY integrations/ox/ ./integrations/ox/
+COPY guard/tests/fixtures/ ./guard/tests/fixtures/
+
+ENV RESULTS_DIR=/results
+
+ENTRYPOINT ["python3", "/app/runner/run_ox_live.py"]

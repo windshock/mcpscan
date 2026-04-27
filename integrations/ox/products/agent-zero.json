@@ -1,0 +1,25 @@
+{
+  "id": "agent-zero",
+  "name": "Agent Zero",
+  "source_url": "https://github.com/frdel/agent-zero",
+  "launch": {
+    "kind": "docker_image",
+    "image": "agent0ai/agent-zero:v1.7",
+    "ports": [
+      {
+        "host": 38090,
+        "container": 80
+      }
+    ],
+    "pull": true
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:38090/",
+    "acceptable_statuses": [200, 302, 404],
+    "startup_timeout_sec": 300
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "Agent Zero"
+  }
+}

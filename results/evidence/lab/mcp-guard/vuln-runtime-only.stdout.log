@@ -1,0 +1,34 @@
+{
+  "target": "/servers/vuln-runtime-only",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "command_exec",
+    "env_exposure"
+  ],
+  "verdicts": [
+    {
+      "pattern": "command_exec",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "subprocess.run"
+    },
+    {
+      "pattern": "env_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "env_dump"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "command_exec",
+      "recommendation": "Remove direct command execution. Use allowlisted operations only."
+    },
+    {
+      "pattern": "env_exposure",
+      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+    }
+  ]
+}

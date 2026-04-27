@@ -1,0 +1,22 @@
+{
+  "target": "normal-realistic",
+  "scanner_name": "mcp-guard",
+  "timestamp": "2026-04-22T23:17:36.725796+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [],
+  "detected_findings": [
+    "unrestricted_file_read"
+  ],
+  "true_positives": [],
+  "missed_findings": [],
+  "false_positives": [
+    "unrestricted_file_read"
+  ],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "/servers/normal-realistic",
+  "exit_code": null
+}

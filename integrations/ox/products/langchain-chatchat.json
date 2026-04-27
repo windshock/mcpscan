@@ -1,0 +1,18 @@
+{
+  "id": "langchain-chatchat",
+  "name": "LangChain ChatChat",
+  "source_url": "https://github.com/chatchat-space/Langchain-Chatchat",
+  "launch": {
+    "kind": "manual_blocked",
+    "reason": "manual_blocked: official Docker deployment requires host-network and GPU-oriented Xinference companion services"
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:0/",
+    "acceptable_statuses": [200],
+    "startup_timeout_sec": 1
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "LangChain ChatChat"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "target": "bisheng",
+  "target_type": "ox_live",
+  "product_name": "BISHENG",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-24T02:46:39.076511+00:00",
+  "source_url": "https://github.com/dataelement/bisheng",
+  "launch_kind": "repo_compose",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "command_failed",
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": true,
+  "launch_matches_expectation": false,
+  "expected_health_status": "reachable",
+  "health_matches_expectation": false,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [
+    "error: pathspec 'v2.4.0-beta1-fix' did not match any file(s) known to git"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/bisheng/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/bisheng/scan.stderr"
+  }
+}

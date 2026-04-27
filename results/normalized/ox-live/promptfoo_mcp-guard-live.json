@@ -1,0 +1,41 @@
+{
+  "target": "promptfoo",
+  "target_type": "ox_live",
+  "product_name": "PromptFoo",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-22T23:22:39.023782+00:00",
+  "source_url": "https://github.com/promptfoo/promptfoo",
+  "launch_kind": "manual_blocked",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "manual_blocked",
+  "expected_findings": [
+    "config_to_execution",
+    "allowlist_bypass"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution",
+    "allowlist_bypass"
+  ],
+  "true_positives": [
+    "allowlist_bypass",
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": false,
+  "launch_matches_expectation": true,
+  "expected_health_status": null,
+  "health_matches_expectation": null,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [
+    "manual_blocked: promptfoo is distributed primarily as a CLI package without a stable official server container"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/promptfoo/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/promptfoo/scan.stderr"
+  }
+}

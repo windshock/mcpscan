@@ -1,0 +1,32 @@
+{
+  "target": "vuln-network",
+  "scanner_name": "mcp-guard",
+  "timestamp": "2026-04-22T23:17:36.729334+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "ssrf",
+    "cors_misconfiguration",
+    "internal_metadata_exposure"
+  ],
+  "detected_findings": [
+    "env_exposure",
+    "ssrf"
+  ],
+  "true_positives": [
+    "ssrf"
+  ],
+  "missed_findings": [
+    "cors_misconfiguration",
+    "internal_metadata_exposure"
+  ],
+  "false_positives": [
+    "env_exposure"
+  ],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "/servers/vuln-network",
+  "exit_code": null
+}

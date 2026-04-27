@@ -1,0 +1,34 @@
+{
+  "target": "/servers/vuln-allowlist-bypass",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "command_exec",
+    "allowlist_bypass"
+  ],
+  "verdicts": [
+    {
+      "pattern": "command_exec",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "exec("
+    },
+    {
+      "pattern": "allowlist_bypass",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "ALLOWED_COMMANDS"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "command_exec",
+      "recommendation": "Remove direct command execution. Use allowlisted operations only."
+    },
+    {
+      "pattern": "allowlist_bypass",
+      "recommendation": "Validate both command name AND arguments. Use strict argument schemas."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "target": "/servers/normal-tricky",
+  "risk": "NONE",
+  "policy_verdict": "ALLOW",
+  "environment": "production",
+  "findings": [],
+  "verdicts": [],
+  "recommendations": []
+}

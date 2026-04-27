@@ -1,0 +1,9 @@
+{
+  "target": "/servers/normal-strict",
+  "risk": "NONE",
+  "policy_verdict": "ALLOW",
+  "environment": "production",
+  "findings": [],
+  "verdicts": [],
+  "recommendations": []
+}

@@ -1,0 +1,29 @@
+{
+  "target": "vuln-hidden-transport",
+  "scanner_name": "mcp-guard",
+  "timestamp": "2026-04-22T23:17:36.728979+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "hidden_transport",
+    "connector_metadata_exposure",
+    "config_injection"
+  ],
+  "detected_findings": [
+    "hidden_transport"
+  ],
+  "true_positives": [
+    "hidden_transport"
+  ],
+  "missed_findings": [
+    "config_injection",
+    "connector_metadata_exposure"
+  ],
+  "false_positives": [],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "/servers/vuln-hidden-transport",
+  "exit_code": null
+}

@@ -1,0 +1,38 @@
+{
+  "id": "letta-ai",
+  "name": "LettaAI",
+  "source_url": "https://github.com/letta-ai/letta",
+  "launch": {
+    "kind": "repo_compose",
+    "repo_url": "https://github.com/letta-ai/letta.git",
+    "ref": "0.16.7",
+    "compose_file": "compose.yaml",
+    "project_name": "mcpscan-ox-letta",
+    "write_files": {
+      ".env": "OPENAI_API_KEY=\nGROQ_API_KEY=\nANTHROPIC_API_KEY=\nGEMINI_API_KEY=\n"
+    },
+    "compose_overrides": {
+      "services": {
+        "letta_db": {
+          "ports": []
+        },
+        "letta_server": {
+          "image": "letta/letta:0.16.7",
+          "ports": ["38083:8083", "38283:8283"]
+        },
+        "letta_nginx": {
+          "ports": ["38080:80"]
+        }
+      }
+    }
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:38080/",
+    "acceptable_statuses": [200, 302, 404],
+    "startup_timeout_sec": 600
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "LettaAI"
+  }
+}

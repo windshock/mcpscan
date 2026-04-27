@@ -1,0 +1,43 @@
+{
+  "target_type": "ox_live",
+  "product_id": "jaaz",
+  "product_name": "Jaaz",
+  "source_url": "https://www.jaaz.one/",
+  "timestamp": "2026-04-22T23:21:29.766383+00:00",
+  "launch_kind": "manual_blocked",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "manual_blocked",
+  "notes": [
+    "manual_blocked: no official self-hosted repository or Docker launch path was identified"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/jaaz/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/jaaz/scan.stderr"
+  },
+  "scan_mode": "config_fixture",
+  "scan_result": {
+    "target": "config_json",
+    "risk": "CRITICAL",
+    "policy_verdict": "BLOCK",
+    "environment": "production",
+    "findings": [
+      "config_to_execution"
+    ],
+    "verdicts": [
+      {
+        "pattern": "config_to_execution",
+        "severity": "CRITICAL",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.jaaz_attack.command = cmd"
+      }
+    ],
+    "recommendations": [
+      {
+        "pattern": "config_to_execution",
+        "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+      }
+    ]
+  }
+}

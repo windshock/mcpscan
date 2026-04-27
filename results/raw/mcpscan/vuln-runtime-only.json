@@ -1,0 +1,34 @@
+[
+  {
+    "file": "/servers/vuln-runtime-only/server.py",
+    "rule_id": "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "severity": "ERROR",
+    "risk": "HIGH",
+    "explanation": "中风险：检测到系统命令执行\n- 命令调用: [\"cat\", \"/etc/passwd\"]\n- 风险级别: 中风险 - 系统命令执行\n",
+    "class": "Suspected malicious code in the tool."
+  },
+  {
+    "file": "/servers/vuln-runtime-only/server.py",
+    "rule_id": "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "severity": "ERROR",
+    "risk": "HIGH",
+    "explanation": "中风险：检测到系统命令执行\n- 命令调用: [\"lsmod\"]\n- 风险级别: 中风险 - 系统命令执行\n",
+    "class": "Suspected malicious code in the tool."
+  },
+  {
+    "file": "/servers/vuln-runtime-only/server.py",
+    "rule_id": "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "severity": "ERROR",
+    "risk": "HIGH",
+    "explanation": "中风险：检测到系统命令执行\n- 命令调用: [\"env\"]\n- 风险级别: 中风险 - 系统命令执行\n",
+    "class": "Suspected malicious code in the tool."
+  },
+  {
+    "file": "/servers/vuln-runtime-only/server.py",
+    "rule_id": "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "severity": "ERROR",
+    "risk": "HIGH",
+    "explanation": "中风险：检测到系统命令执行\n- 命令调用: cmd\n- 风险级别: 中风险 - 系统命令执行\n",
+    "class": "Suspected malicious code in the tool."
+  }
+]

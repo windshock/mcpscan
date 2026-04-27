@@ -1,0 +1,34 @@
+{
+  "target": "/servers/vuln-network",
+  "risk": "HIGH",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "env_exposure",
+    "ssrf"
+  ],
+  "verdicts": [
+    {
+      "pattern": "env_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "process.env"
+    },
+    {
+      "pattern": "ssrf",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "fetch("
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "env_exposure",
+      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+    },
+    {
+      "pattern": "ssrf",
+      "recommendation": "Implement URL allowlisting. Block private/internal IP ranges."
+    }
+  ]
+}

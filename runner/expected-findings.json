@@ -1,0 +1,100 @@
+{
+  "version": "3.0",
+  "description": "Expected findings per server based on the vulnerability pattern matrix",
+  "servers": {
+    "normal-strict": {
+      "port": 3001,
+      "type": "normal",
+      "expected_findings": [],
+      "expected_false_positives": [],
+      "description": "Cleanest possible MCP server - zero vulnerabilities"
+    },
+    "normal-realistic": {
+      "port": 3002,
+      "type": "normal",
+      "expected_findings": [],
+      "expected_false_positives": ["file_read_limited", "config_access_limited"],
+      "description": "Business-needed tools with strict limits - FP trap for limited file read"
+    },
+    "normal-tricky": {
+      "port": 3003,
+      "type": "normal",
+      "expected_findings": [],
+      "expected_false_positives": ["command_execution_lookalike", "env_access_lookalike", "process_list_lookalike"],
+      "description": "Looks dangerous but is actually safe - FP trap"
+    },
+    "vuln-exec": {
+      "port": 3101,
+      "type": "vulnerable",
+      "expected_findings": ["command_exec", "tool_poisoning"],
+      "expected_false_positives": [],
+      "description": "Direct command execution + tool poisoning in description"
+    },
+    "vuln-authless": {
+      "port": 3102,
+      "type": "vulnerable",
+      "expected_findings": ["authless_endpoint", "tool_poisoning", "env_exposure", "unrestricted_file_read"],
+      "expected_false_positives": [],
+      "description": "No authentication + tool poisoning + unrestricted access"
+    },
+    "vuln-filesystem": {
+      "port": 3103,
+      "type": "vulnerable",
+      "expected_findings": ["unrestricted_file_read", "unrestricted_file_write", "env_exposure", "excessive_permissions"],
+      "expected_false_positives": [],
+      "description": "Unrestricted file access + env exposure"
+    },
+    "vuln-config-exec": {
+      "port": 3104,
+      "type": "vulnerable",
+      "expected_findings": ["config_to_execution", "remote_config_loading", "command_exec"],
+      "expected_false_positives": [],
+      "description": "Config-to-execution escalation path"
+    },
+    "vuln-runtime-only": {
+      "port": 3105,
+      "type": "vulnerable",
+      "expected_findings": ["runtime_only_danger", "conditional_command_exec", "static_analysis_bypass"],
+      "expected_false_positives": [],
+      "description": "Looks safe statically, dangerous at runtime"
+    },
+    "vuln-network": {
+      "port": 3201,
+      "type": "vulnerable",
+      "expected_findings": ["ssrf", "cors_misconfiguration", "internal_metadata_exposure"],
+      "expected_false_positives": [],
+      "description": "SSRF + CORS * + debug info exposure"
+    },
+    "vuln-allowlist-bypass": {
+      "port": 3202,
+      "type": "vulnerable",
+      "expected_findings": ["allowlist_bypass", "command_exec_via_args"],
+      "expected_false_positives": [],
+      "description": "Allowlist on command name but args are unvalidated"
+    },
+    "vuln-hidden-transport": {
+      "port": 3203,
+      "type": "vulnerable",
+      "expected_findings": ["hidden_transport", "connector_metadata_exposure", "config_injection"],
+      "expected_false_positives": [],
+      "description": "Clean UI tools but hidden transport/config endpoints"
+    }
+  },
+  "exposure": {
+    "proxy-public": {
+      "port": 8080,
+      "expected_findings": ["public_endpoint", "no_auth", "cors_wildcard"],
+      "description": "Public-facing MCP endpoint without auth"
+    },
+    "proxy-internal": {
+      "port": 8081,
+      "expected_findings": [],
+      "description": "Internal MCP endpoint with auth and strict CORS"
+    },
+    "config-elevator": {
+      "port": 3301,
+      "expected_findings": ["ai_mediated_config_injection", "config_suggestion_without_validation"],
+      "description": "AI-mediated config suggestion and injection"
+    }
+  }
+}

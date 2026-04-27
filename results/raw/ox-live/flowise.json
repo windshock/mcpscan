@@ -1,0 +1,88 @@
+{
+  "target_type": "ox_live",
+  "product_id": "flowise",
+  "product_name": "Flowise",
+  "source_url": "https://github.com/FlowiseAI/Flowise",
+  "timestamp": "2026-04-22T23:19:34.540936+00:00",
+  "launch_kind": "docker_image",
+  "launch_status": "success",
+  "health_status": "reachable",
+  "scan_status": "success",
+  "failure_reason": null,
+  "notes": [],
+  "evidence": {
+    "launch_command": [
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      "mcpscan-ox-flowise",
+      "--label",
+      "mcpscan.ox-live=true",
+      "-e",
+      "PORT=3000",
+      "-p",
+      "33000:3000",
+      "flowiseai/flowise:latest"
+    ],
+    "health": "results/raw/ox-live/evidence/flowise/health.json",
+    "launch_logs": "results/raw/ox-live/evidence/flowise/launch.log",
+    "scan_stdout": "results/raw/ox-live/evidence/flowise/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/flowise/scan.stderr"
+  },
+  "healthcheck": {
+    "status": "reachable",
+    "url": "http://127.0.0.1:33000/",
+    "http_status": 200,
+    "probe": {
+      "reachable": true,
+      "status": 200,
+      "headers": {
+        "Vary": "Origin",
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=0",
+        "Last-Modified": "Tue, 14 Apr 2026 11:41:39 GMT",
+        "ETag": "W/\"c46-19d8bcc0d38\"",
+        "Content-Type": "text/html; charset=UTF-8",
+        "Content-Length": "3142",
+        "Date": "Wed, 22 Apr 2026 23:21:25 GMT",
+        "Connection": "close"
+      }
+    }
+  },
+  "scan_mode": "config_fixture",
+  "scan_result": {
+    "target": "config_json",
+    "risk": "CRITICAL",
+    "policy_verdict": "BLOCK",
+    "environment": "production",
+    "findings": [
+      "config_to_execution",
+      "allowlist_bypass"
+    ],
+    "verdicts": [
+      {
+        "pattern": "config_to_execution",
+        "severity": "CRITICAL",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.flowise_attack.command = npx"
+      },
+      {
+        "pattern": "allowlist_bypass",
+        "severity": "HIGH",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.flowise_attack.args contains flags: ['-c', 'touch /tmp/pwn']"
+      }
+    ],
+    "recommendations": [
+      {
+        "pattern": "config_to_execution",
+        "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+      },
+      {
+        "pattern": "allowlist_bypass",
+        "recommendation": "Validate both command name AND arguments. Use strict argument schemas."
+      }
+    ]
+  }
+}

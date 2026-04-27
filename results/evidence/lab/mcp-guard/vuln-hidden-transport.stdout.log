@@ -1,0 +1,23 @@
+{
+  "target": "/servers/vuln-hidden-transport",
+  "risk": "HIGH",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "hidden_transport"
+  ],
+  "verdicts": [
+    {
+      "pattern": "hidden_transport",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "/api/transport"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "hidden_transport",
+      "recommendation": "Remove hidden admin endpoints or protect with strong authentication."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "target": "vuln-runtime-only",
+  "scanner_name": "mcp-guard",
+  "timestamp": "2026-04-22T23:17:36.729654+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "runtime_only_danger",
+    "conditional_command_exec",
+    "static_analysis_bypass"
+  ],
+  "detected_findings": [
+    "command_exec",
+    "env_exposure"
+  ],
+  "true_positives": [],
+  "missed_findings": [
+    "conditional_command_exec",
+    "runtime_only_danger",
+    "static_analysis_bypass"
+  ],
+  "false_positives": [
+    "command_exec",
+    "env_exposure"
+  ],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "/servers/vuln-runtime-only",
+  "exit_code": null
+}

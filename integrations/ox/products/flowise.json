@@ -1,0 +1,28 @@
+{
+  "id": "flowise",
+  "name": "Flowise",
+  "source_url": "https://github.com/FlowiseAI/Flowise",
+  "launch": {
+    "kind": "docker_image",
+    "image": "flowiseai/flowise:3.1.1",
+    "ports": [
+      {
+        "host": 33000,
+        "container": 3000
+      }
+    ],
+    "env": {
+      "PORT": "3000"
+    },
+    "pull": true
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:33000/",
+    "acceptable_statuses": [200, 302, 404],
+    "startup_timeout_sec": 240
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "Flowise"
+  }
+}

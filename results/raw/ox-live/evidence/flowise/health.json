@@ -1,0 +1,20 @@
+{
+  "status": "reachable",
+  "url": "http://127.0.0.1:33000/",
+  "http_status": 200,
+  "probe": {
+    "reachable": true,
+    "status": 200,
+    "headers": {
+      "Vary": "Origin",
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "public, max-age=0",
+      "Last-Modified": "Tue, 14 Apr 2026 11:41:39 GMT",
+      "ETag": "W/\"c46-19d8bcc0d38\"",
+      "Content-Type": "text/html; charset=UTF-8",
+      "Content-Length": "3142",
+      "Date": "Wed, 22 Apr 2026 23:21:25 GMT",
+      "Connection": "close"
+    }
+  }
+}

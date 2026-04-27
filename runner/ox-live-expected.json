@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "products": {
+    "langflow": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "litellm": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "flowise": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution", "allowlist_bypass"]
+    },
+    "docsgpt": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "upsonic": {
+      "expected_launch_success": false,
+      "expected_health_status": null,
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution", "allowlist_bypass"]
+    },
+    "gpt-researcher": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "letta-ai": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "windsurf": {
+      "expected_launch_success": false,
+      "expected_health_status": null,
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "langchain-chatchat": {
+      "expected_launch_success": false,
+      "expected_health_status": null,
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "agent-zero": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "jaaz": {
+      "expected_launch_success": false,
+      "expected_health_status": null,
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "bisheng": {
+      "expected_launch_success": true,
+      "expected_health_status": "reachable",
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "openhands": {
+      "expected_launch_success": false,
+      "expected_health_status": null,
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution"]
+    },
+    "promptfoo": {
+      "expected_launch_success": false,
+      "expected_health_status": null,
+      "expected_scan_status": "success",
+      "expected_findings": ["config_to_execution", "allowlist_bypass"]
+    }
+  }
+}

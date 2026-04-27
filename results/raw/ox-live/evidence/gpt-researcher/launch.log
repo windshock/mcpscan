@@ -1,0 +1,26 @@
+gptr-nextjs-1  | 
+gptr-nextjs-1  | > gpt-researcher-ui@0.1.74 dev
+gptr-nextjs-1  | > next dev
+gptr-nextjs-1  | 
+gptr-nextjs-1  |   ▲ Next.js 14.2.35
+gptr-nextjs-1  |   - Local:        http://localhost:3000
+gptr-nextjs-1  | 
+gptr-nextjs-1  |  ✓ Starting...
+gptr-nextjs-1  | Attention: Next.js now collects completely anonymous telemetry regarding usage.
+gptr-nextjs-1  | This information is used to shape Next.js' roadmap and prioritize features.
+gptr-nextjs-1  | You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+gptr-nextjs-1  | https://nextjs.org/telemetry
+gptr-nextjs-1  | 
+gptr-nextjs-1  |  ○ (pwa) PWA support is disabled.
+gptr-nextjs-1  |  ✓ Ready in 1623ms
+gpt-researcher-1  | INFO:     Started server process [7]
+gpt-researcher-1  | INFO:     Waiting for application startup.
+gpt-researcher-1  | 2026-04-24 01:33:50,719 - backend.server.app - INFO - GPT Researcher API ready - local mode (no database persistence)
+gpt-researcher-1  | INFO:     Application startup complete.
+gpt-researcher-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+gpt-researcher-1  | INFO:     192.168.65.1:43685 - "GET / HTTP/1.1" 200 OK
+
+time="2026-04-24T10:33:52+09:00" level=warning msg="The \"GOOGLE_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:33:52+09:00" level=warning msg="The \"NEXT_PUBLIC_GA_MEASUREMENT_ID\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:33:52+09:00" level=warning msg="The \"DISCORD_BOT_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:33:52+09:00" level=warning msg="The \"DISCORD_CLIENT_ID\" variable is not set. Defaulting to a blank string."

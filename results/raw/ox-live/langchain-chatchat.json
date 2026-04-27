@@ -1,0 +1,43 @@
+{
+  "target_type": "ox_live",
+  "product_id": "langchain-chatchat",
+  "product_name": "LangChain ChatChat",
+  "source_url": "https://github.com/chatchat-space/Langchain-Chatchat",
+  "timestamp": "2026-04-22T23:21:30.148630+00:00",
+  "launch_kind": "manual_blocked",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "manual_blocked",
+  "notes": [
+    "manual_blocked: official Docker deployment requires host-network and GPU-oriented Xinference companion services"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/langchain-chatchat/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/langchain-chatchat/scan.stderr"
+  },
+  "scan_mode": "config_fixture",
+  "scan_result": {
+    "target": "config_json",
+    "risk": "CRITICAL",
+    "policy_verdict": "BLOCK",
+    "environment": "production",
+    "findings": [
+      "config_to_execution"
+    ],
+    "verdicts": [
+      {
+        "pattern": "config_to_execution",
+        "severity": "CRITICAL",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.chatchat_attack.command = python3"
+      }
+    ],
+    "recommendations": [
+      {
+        "pattern": "config_to_execution",
+        "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+      }
+    ]
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "target_type": "ox_live",
+  "product_id": "upsonic",
+  "product_name": "Upsonic",
+  "source_url": "https://github.com/Upsonic/Upsonic",
+  "timestamp": "2026-04-22T23:22:39.377234+00:00",
+  "launch_kind": "manual_blocked",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "manual_blocked",
+  "notes": [
+    "manual_blocked: official self-hosted Docker launch path was not identified from the public repository"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/upsonic/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/upsonic/scan.stderr"
+  },
+  "scan_mode": "config_fixture",
+  "scan_result": {
+    "target": "config_json",
+    "risk": "CRITICAL",
+    "policy_verdict": "BLOCK",
+    "environment": "production",
+    "findings": [
+      "config_to_execution",
+      "allowlist_bypass"
+    ],
+    "verdicts": [
+      {
+        "pattern": "config_to_execution",
+        "severity": "CRITICAL",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.upsonic_attack.command = git"
+      },
+      {
+        "pattern": "allowlist_bypass",
+        "severity": "HIGH",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.upsonic_attack.args contains flags: ['-c', 'core.pager=touch /tmp/pwn']"
+      }
+    ],
+    "recommendations": [
+      {
+        "pattern": "config_to_execution",
+        "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+      },
+      {
+        "pattern": "allowlist_bypass",
+        "recommendation": "Validate both command name AND arguments. Use strict argument schemas."
+      }
+    ]
+  }
+}

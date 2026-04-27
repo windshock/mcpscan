@@ -1,0 +1,33 @@
+{
+  "target": "vuln-config-exec",
+  "scanner_name": "mcpscan",
+  "timestamp": "2026-04-22T23:17:36.718953+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "config_to_execution",
+    "remote_config_loading",
+    "command_exec"
+  ],
+  "detected_findings": [
+    "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "opt.mcpscan.src.mcpscan.rules.detect-command-execution"
+  ],
+  "true_positives": [],
+  "missed_findings": [
+    "command_exec",
+    "config_to_execution",
+    "remote_config_loading"
+  ],
+  "false_positives": [
+    "opt.mcpscan.src.mcpscan.rules.detect-command-execution"
+  ],
+  "policy_verdict": null,
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": null,
+  "exit_code": null
+}

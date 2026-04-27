@@ -1,0 +1,51 @@
+{
+  "target": "gpt-researcher",
+  "target_type": "ox_live",
+  "product_name": "GPT-Researcher",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-24T01:30:57.541182+00:00",
+  "source_url": "https://github.com/assafelovic/gpt-researcher",
+  "launch_kind": "repo_compose",
+  "launch_status": "success",
+  "health_status": "reachable",
+  "scan_status": "success",
+  "failure_reason": null,
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": true,
+  "launch_matches_expectation": true,
+  "expected_health_status": "reachable",
+  "health_matches_expectation": true,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [],
+  "evidence": {
+    "launch_command": [
+      "/usr/local/bin/docker",
+      "compose",
+      "-f",
+      "/Users/1004276/Downloads/mcpscan/results/workdir/ox-live/gpt-researcher/docker-compose.yml",
+      "-f",
+      "/Users/1004276/Downloads/mcpscan/results/workdir/ox-live/gpt-researcher/.mcpscan-compose.override.yaml",
+      "-p",
+      "mcpscan-ox-gpt-researcher",
+      "up",
+      "-d",
+      "--remove-orphans"
+    ],
+    "health": "results/raw/ox-live/evidence/gpt-researcher/health.json",
+    "launch_logs": "results/raw/ox-live/evidence/gpt-researcher/launch.log",
+    "scan_stdout": "results/raw/ox-live/evidence/gpt-researcher/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/gpt-researcher/scan.stderr"
+  }
+}

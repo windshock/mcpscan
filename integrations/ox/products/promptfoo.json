@@ -1,0 +1,18 @@
+{
+  "id": "promptfoo",
+  "name": "PromptFoo",
+  "source_url": "https://github.com/promptfoo/promptfoo",
+  "launch": {
+    "kind": "manual_blocked",
+    "reason": "manual_blocked: promptfoo is distributed primarily as a CLI package without a stable official server container"
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:0/",
+    "acceptable_statuses": [200],
+    "startup_timeout_sec": 1
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "PromptFoo"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "jaaz",
+  "name": "Jaaz",
+  "source_url": "https://www.jaaz.one/",
+  "launch": {
+    "kind": "manual_blocked",
+    "reason": "manual_blocked: no official self-hosted repository or Docker launch path was identified"
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:0/",
+    "acceptable_statuses": [200],
+    "startup_timeout_sec": 1
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "Jaaz"
+  }
+}

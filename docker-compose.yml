@@ -1,0 +1,255 @@
+x-py-common: &py-common
+  restart: unless-stopped
+  networks:
+    - mcp-lab
+
+x-ts-common: &ts-common
+  restart: unless-stopped
+  networks:
+    - mcp-lab
+
+services:
+  # ── Normal Servers ─────────────────────────────────────
+  normal-strict:
+    <<: *py-common
+    build:
+      context: ./servers/normal-strict
+      dockerfile: Dockerfile
+    ports:
+      - "${NORMAL_STRICT_PORT:-3001}:8000"
+    environment:
+      - BEARER_TOKEN=${BEARER_TOKEN_NORMAL}
+      - SERVER_NAME=normal-strict
+
+  normal-realistic:
+    <<: *py-common
+    build:
+      context: ./servers/normal-realistic
+      dockerfile: Dockerfile
+    ports:
+      - "${NORMAL_REALISTIC_PORT:-3002}:8000"
+    environment:
+      - BEARER_TOKEN=${BEARER_TOKEN_REALISTIC}
+      - SERVER_NAME=normal-realistic
+    volumes:
+      - realistic-data:/data
+
+  normal-tricky:
+    <<: *py-common
+    build:
+      context: ./servers/normal-tricky
+      dockerfile: Dockerfile
+    ports:
+      - "${NORMAL_TRICKY_PORT:-3003}:8000"
+    environment:
+      - BEARER_TOKEN=${BEARER_TOKEN_TRICKY}
+      - SERVER_NAME=normal-tricky
+
+  # ── Vulnerable Servers (Python) ────────────────────────
+  vuln-exec:
+    <<: *py-common
+    build:
+      context: ./servers/vuln-exec
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_EXEC_PORT:-3101}:8000"
+    environment:
+      - SERVER_NAME=vuln-exec
+
+  vuln-authless:
+    <<: *py-common
+    build:
+      context: ./servers/vuln-authless
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_AUTHLESS_PORT:-3102}:8000"
+    environment:
+      - SERVER_NAME=vuln-authless
+
+  vuln-filesystem:
+    <<: *py-common
+    build:
+      context: ./servers/vuln-filesystem
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_FILESYSTEM_PORT:-3103}:8000"
+    environment:
+      - SERVER_NAME=vuln-filesystem
+      - SECRET_API_KEY=super-secret-key-12345
+      - DB_PASSWORD=admin-password-67890
+
+  vuln-config-exec:
+    <<: *py-common
+    build:
+      context: ./servers/vuln-config-exec
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_CONFIG_EXEC_PORT:-3104}:8000"
+    environment:
+      - SERVER_NAME=vuln-config-exec
+
+  vuln-runtime-only:
+    <<: *py-common
+    build:
+      context: ./servers/vuln-runtime-only
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_RUNTIME_ONLY_PORT:-3105}:8000"
+    environment:
+      - SERVER_NAME=vuln-runtime-only
+      - RUNTIME_SECRET=backdoor-secret-xyz
+
+  # ── Vulnerable Servers (TypeScript) ────────────────────
+  vuln-network:
+    <<: *ts-common
+    build:
+      context: ./servers/vuln-network
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_NETWORK_PORT:-3201}:3000"
+    environment:
+      - SERVER_NAME=vuln-network
+
+  vuln-allowlist-bypass:
+    <<: *ts-common
+    build:
+      context: ./servers/vuln-allowlist-bypass
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_ALLOWLIST_BYPASS_PORT:-3202}:3000"
+    environment:
+      - SERVER_NAME=vuln-allowlist-bypass
+
+  vuln-hidden-transport:
+    <<: *ts-common
+    build:
+      context: ./servers/vuln-hidden-transport
+      dockerfile: Dockerfile
+    ports:
+      - "${VULN_HIDDEN_TRANSPORT_PORT:-3203}:3000"
+    environment:
+      - SERVER_NAME=vuln-hidden-transport
+
+  # ── Exposure Simulation ────────────────────────────────
+  proxy-public:
+    image: nginx:alpine
+    ports:
+      - "${PROXY_PUBLIC_PORT:-8080}:80"
+    volumes:
+      - ./exposure/proxy-public/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - mcp-lab
+    depends_on:
+      - vuln-authless
+
+  proxy-internal:
+    image: nginx:alpine
+    ports:
+      - "${PROXY_INTERNAL_PORT:-8081}:80"
+    volumes:
+      - ./exposure/proxy-internal/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - mcp-lab
+    depends_on:
+      - normal-strict
+
+  config-elevator:
+    build:
+      context: ./exposure/config-elevator
+      dockerfile: Dockerfile
+    ports:
+      - "${CONFIG_ELEVATOR_PORT:-3301}:8000"
+    environment:
+      - SERVER_NAME=config-elevator
+    networks:
+      - mcp-lab
+
+  # ── Scanners ───────────────────────────────────────────
+  mcpscan:
+    build:
+      context: ./scanners/mcpscan
+      dockerfile: Dockerfile
+    networks:
+      - mcp-lab
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+    volumes:
+      - ./results/raw/mcpscan:/output
+
+  cisco-scanner:
+    build:
+      context: ./scanners/cisco-scanner
+      dockerfile: Dockerfile
+    networks:
+      - mcp-lab
+    environment:
+      - MCP_SCANNER_API_KEY=${MCP_SCANNER_API_KEY:-}
+      - MCP_SCANNER_LLM_API_KEY=${MCP_SCANNER_LLM_API_KEY:-}
+      - MCP_SCANNER_LLM_MODEL=${MCP_SCANNER_LLM_MODEL:-gpt-4o}
+    volumes:
+      - ./results/raw/cisco-scanner:/output
+
+  inspector:
+    build:
+      context: ./scanners/inspector
+      dockerfile: Dockerfile
+    ports:
+      - "${INSPECTOR_PORT:-6274}:6274"
+    networks:
+      - mcp-lab
+
+  # ── Runner ──────────────────────────────────────────────
+  runner:
+    build:
+      context: .
+      dockerfile: runner/Dockerfile
+    networks:
+      - mcp-lab
+    depends_on:
+      - normal-strict
+      - normal-realistic
+      - normal-tricky
+      - vuln-exec
+      - vuln-authless
+      - vuln-filesystem
+      - vuln-config-exec
+      - vuln-runtime-only
+      - vuln-network
+      - vuln-allowlist-bypass
+      - vuln-hidden-transport
+      - mcpscan
+      - cisco-scanner
+    volumes:
+      - ./servers:/servers:ro
+      - ./results:/results
+
+  ox-live-runner:
+    build:
+      context: .
+      dockerfile: runner/Dockerfile.live
+    profiles:
+      - ox-live
+    volumes:
+      - ./results:/results
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - RESULTS_DIR=/results
+
+  # ── mcp-guard ──────────────────────────────────────────
+  mcp-guard:
+    build:
+      context: ./guard
+      dockerfile: Dockerfile
+    networks:
+      - mcp-lab
+    volumes:
+      - ./servers:/servers:ro
+      - ./results/raw/mcp-guard:/output
+      - ./guard/mcp-policy.yaml:/app/mcp-policy.yaml:ro
+
+networks:
+  mcp-lab:
+    driver: bridge
+
+volumes:
+  realistic-data:

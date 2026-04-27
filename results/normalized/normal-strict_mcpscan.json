@@ -1,0 +1,18 @@
+{
+  "target": "normal-strict",
+  "scanner_name": "mcpscan",
+  "timestamp": "2026-04-22T23:17:36.717684+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [],
+  "detected_findings": [],
+  "true_positives": [],
+  "missed_findings": [],
+  "false_positives": [],
+  "policy_verdict": null,
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": null,
+  "exit_code": null
+}

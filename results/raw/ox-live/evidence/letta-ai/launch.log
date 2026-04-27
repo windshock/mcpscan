@@ -1,0 +1,88 @@
+letta_nginx-1  | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+letta_nginx-1  | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+letta_nginx-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+letta_nginx-1  | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+letta_nginx-1  | 10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+letta_nginx-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+letta_nginx-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+letta_nginx-1  | /docker-entrypoint.sh: Configuration complete; ready for start up
+letta_nginx-1  | 192.168.65.1 - - [24/Apr/2026:01:38:21 +0000] "GET / HTTP/1.1" 404 153 "-" "mcpscan-ox-live/1.0"
+letta_db-1     | The files belonging to this database system will be owned by user "postgres".
+letta_db-1     | This user must also own the server process.
+letta_db-1     | 
+letta_db-1     | The database cluster will be initialized with locale "en_US.utf8".
+letta_db-1     | The default database encoding has accordingly been set to "UTF8".
+letta_db-1     | The default text search configuration will be set to "english".
+letta_db-1     | 
+letta_db-1     | Data page checksums are disabled.
+letta_db-1     | 
+letta_db-1     | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+letta_db-1     | creating subdirectories ... ok
+letta_db-1     | selecting dynamic shared memory implementation ... posix
+letta_db-1     | selecting default max_connections ... 100
+letta_db-1     | selecting default shared_buffers ... 128MB
+letta_db-1     | selecting default time zone ... Etc/UTC
+letta_db-1     | creating configuration files ... ok
+letta_db-1     | running bootstrap script ... ok
+letta_db-1     | performing post-bootstrap initialization ... ok
+letta_db-1     | syncing data to disk ... ok
+letta_db-1     | 
+letta_db-1     | 
+letta_db-1     | Success. You can now start the database server using:
+letta_db-1     | 
+letta_db-1     |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+letta_db-1     | 
+letta_db-1     | initdb: warning: enabling "trust" authentication for local connections
+letta_db-1     | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+letta_db-1     | waiting for server to start....2026-04-24 01:38:16.834 UTC [49] LOG:  starting PostgreSQL 15.4 (Debian 15.4-2.pgdg120+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+letta_db-1     | 2026-04-24 01:38:16.834 UTC [49] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+letta_db-1     | 2026-04-24 01:38:16.838 UTC [52] LOG:  database system was shut down at 2026-04-24 01:38:16 UTC
+letta_db-1     | 2026-04-24 01:38:16.841 UTC [49] LOG:  database system is ready to accept connections
+letta_db-1     |  done
+letta_db-1     | server started
+letta_db-1     | CREATE DATABASE
+letta_db-1     | 
+letta_db-1     | 
+letta_db-1     | /usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init.sql
+letta_db-1     | You are now connected to database "letta" as user "letta".
+letta_db-1     | CREATE SCHEMA
+letta_db-1     | ALTER DATABASE
+letta_db-1     | CREATE EXTENSION
+letta_db-1     | DROP SCHEMA
+letta_db-1     | 
+letta_db-1     | 
+letta_db-1     | 2026-04-24 01:38:17.129 UTC [49] LOG:  received fast shutdown request
+letta_db-1     | waiting for server to shut down....2026-04-24 01:38:17.129 UTC [49] LOG:  aborting any active transactions
+letta_db-1     | 2026-04-24 01:38:17.130 UTC [49] LOG:  background worker "logical replication launcher" (PID 55) exited with exit code 1
+letta_db-1     | 2026-04-24 01:38:17.131 UTC [50] LOG:  shutting down
+letta_db-1     | 2026-04-24 01:38:17.131 UTC [50] LOG:  checkpoint starting: shutdown immediate
+letta_db-1     | 2026-04-24 01:38:17.203 UTC [50] LOG:  checkpoint complete: wrote 929 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.056 s, sync=0.016 s, total=0.073 s; sync files=303, longest=0.001 s, average=0.001 s; distance=4338 kB, estimate=4338 kB
+letta_db-1     | 2026-04-24 01:38:17.209 UTC [49] LOG:  database system is shut down
+letta_db-1     |  done
+letta_db-1     | server stopped
+letta_db-1     | 
+letta_db-1     | PostgreSQL init process complete; ready for start up.
+letta_db-1     | 
+letta_db-1     | 2026-04-24 01:38:17.242 UTC [1] LOG:  starting PostgreSQL 15.4 (Debian 15.4-2.pgdg120+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+letta_db-1     | 2026-04-24 01:38:17.243 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+letta_db-1     | 2026-04-24 01:38:17.243 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+letta_db-1     | 2026-04-24 01:38:17.244 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+letta_db-1     | 2026-04-24 01:38:17.247 UTC [74] LOG:  database system was shut down at 2026-04-24 01:38:17 UTC
+letta_db-1     | 2026-04-24 01:38:17.251 UTC [1] LOG:  database system is ready to accept connections
+letta_server-1  | No external Redis configuration detected, starting internal Redis...
+letta_server-1  | Using internal Redis at: localhost
+letta_server-1  | External Postgres configuration detected, using env var LETTA_PG_URI
+letta_server-1  | Attempting to migrate database...
+
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"OLLAMA_BASE_URL\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"AZURE_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"AZURE_BASE_URL\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"AZURE_API_VERSION\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"VLLM_API_BASE\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"OPENLLM_AUTH_TYPE\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"OPENLLM_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"LETTA_OTEL_EXPORTER_OTLP_ENDPOINT\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"CLICKHOUSE_ENDPOINT\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"CLICKHOUSE_DATABASE\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"CLICKHOUSE_USERNAME\" variable is not set. Defaulting to a blank string."
+time="2026-04-24T10:38:21+09:00" level=warning msg="The \"CLICKHOUSE_PASSWORD\" variable is not set. Defaulting to a blank string."

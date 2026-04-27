@@ -1,0 +1,23 @@
+{
+  "target": "config_json",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "config_to_execution"
+  ],
+  "verdicts": [
+    {
+      "pattern": "config_to_execution",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "mcpServers.bisheng_attack.command = python"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "config_to_execution",
+      "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+    }
+  ]
+}

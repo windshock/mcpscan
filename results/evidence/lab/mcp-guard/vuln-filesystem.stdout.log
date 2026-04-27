@@ -1,0 +1,45 @@
+{
+  "target": "/servers/vuln-filesystem",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "unrestricted_file_read",
+    "unrestricted_file_write",
+    "env_exposure"
+  ],
+  "verdicts": [
+    {
+      "pattern": "unrestricted_file_read",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "open(path"
+    },
+    {
+      "pattern": "unrestricted_file_write",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "write_file(path"
+    },
+    {
+      "pattern": "env_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "dict(os.environ)"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "unrestricted_file_read",
+      "recommendation": "Restrict file access to allowlisted directories. Validate paths against traversal."
+    },
+    {
+      "pattern": "unrestricted_file_write",
+      "recommendation": "Restrict write access to designated directories only."
+    },
+    {
+      "pattern": "env_exposure",
+      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+    }
+  ]
+}

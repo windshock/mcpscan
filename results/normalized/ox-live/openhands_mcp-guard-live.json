@@ -1,0 +1,38 @@
+{
+  "target": "openhands",
+  "target_type": "ox_live",
+  "product_name": "OpenHands",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-22T23:22:38.676695+00:00",
+  "source_url": "https://github.com/All-Hands-AI/OpenHands",
+  "launch_kind": "manual_blocked",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "manual_blocked",
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution"
+  ],
+  "true_positives": [
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": false,
+  "launch_matches_expectation": true,
+  "expected_health_status": null,
+  "health_matches_expectation": null,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [
+    "manual_blocked: official compose path builds a local app image and nested runtime, which is not yet automated in this repository"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/openhands/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/openhands/scan.stderr"
+  }
+}

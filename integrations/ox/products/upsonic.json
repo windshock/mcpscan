@@ -1,0 +1,18 @@
+{
+  "id": "upsonic",
+  "name": "Upsonic",
+  "source_url": "https://github.com/Upsonic/Upsonic",
+  "launch": {
+    "kind": "manual_blocked",
+    "reason": "manual_blocked: official self-hosted Docker launch path was not identified from the public repository"
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:0/",
+    "acceptable_statuses": [200],
+    "startup_timeout_sec": 1
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "Upsonic"
+  }
+}

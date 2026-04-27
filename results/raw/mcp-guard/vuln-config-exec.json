@@ -1,0 +1,45 @@
+{
+  "target": "/servers/vuln-config-exec",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "command_exec",
+    "ssrf",
+    "config_to_execution"
+  ],
+  "verdicts": [
+    {
+      "pattern": "command_exec",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "subprocess.run"
+    },
+    {
+      "pattern": "ssrf",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "urllib.request"
+    },
+    {
+      "pattern": "config_to_execution",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "apply_config"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "command_exec",
+      "recommendation": "Remove direct command execution. Use allowlisted operations only."
+    },
+    {
+      "pattern": "ssrf",
+      "recommendation": "Implement URL allowlisting. Block private/internal IP ranges."
+    },
+    {
+      "pattern": "config_to_execution",
+      "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+    }
+  ]
+}

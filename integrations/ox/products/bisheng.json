@@ -1,0 +1,46 @@
+{
+  "id": "bisheng",
+  "name": "BISHENG",
+  "source_url": "https://github.com/dataelement/bisheng",
+  "launch": {
+    "kind": "repo_compose",
+    "repo_url": "https://github.com/dataelement/bisheng.git",
+    "ref": "v2.4.0-beta1-fix",
+    "compose_file": "docker/docker-compose.yml",
+    "project_name": "mcpscan-ox-bisheng",
+    "compose_overrides": {
+      "services": {
+        "mysql": {
+          "ports": []
+        },
+        "redis": {
+          "ports": []
+        },
+        "backend": {
+          "ports": ["38610:7860"]
+        },
+        "frontend": {
+          "ports": ["39001:3001"]
+        },
+        "elasticsearch": {
+          "ports": []
+        },
+        "minio": {
+          "ports": []
+        },
+        "milvus": {
+          "ports": []
+        }
+      }
+    }
+  },
+  "healthcheck": {
+    "url": "http://127.0.0.1:39001/",
+    "acceptable_statuses": [200, 302, 404],
+    "startup_timeout_sec": 900
+  },
+  "validation": {
+    "scan_mode": "config_fixture",
+    "fixture_name": "BISHENG"
+  }
+}

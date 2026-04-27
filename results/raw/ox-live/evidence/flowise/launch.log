@@ -1,0 +1,15 @@
+2026-04-22 23:21:20 [INFO]: Starting Flowise...
+2026-04-22 23:21:21 [INFO]: 📦 [server]: Data Source initialized successfully
+2026-04-22 23:21:21 [INFO]: 🔄 [server]: Database migrations completed successfully
+2026-04-22 23:21:21 [INFO]: 🔐 [server]: Identity Manager initialized successfully
+2026-04-22 23:21:23 [INFO]: 🔧 [server]: Nodes pool initialized successfully
+2026-04-22 23:21:23 [INFO]: ⏹️ [server]: Abort controllers pool initialized successfully
+2026-04-22 23:21:23 [INFO]: 🔑 [server]: Encryption key initialized successfully
+2026-04-22 23:21:23 [INFO]: 🔐 [server]: Auth initialized successfully
+2026-04-22 23:21:23 [INFO]: 🚦 [server]: Rate limiters initialized successfully
+2026-04-22 23:21:23 [INFO]: 💾 [server]: Cache pool initialized successfully
+2026-04-22 23:21:23 [INFO]: 📊 [server]: Usage cache manager initialized successfully
+2026-04-22 23:21:23 [INFO]: 📈 [server]: Telemetry initialized successfully
+2026-04-22 23:21:23 [INFO]: 🌊 [server]: SSE Streamer initialized successfully
+2026-04-22 23:21:23 [INFO]: 🎉 [server]: All initialization steps completed successfully!
+2026-04-22 23:21:23 [INFO]: ⚡️ [server]: Flowise Server is listening at :3000

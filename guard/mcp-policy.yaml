@@ -1,0 +1,85 @@
+# MCP Guard Policy Configuration
+# Verdicts: ALLOW, CONDITIONAL, BLOCK
+
+rules:
+  - pattern: command_exec
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+  - pattern: tool_poisoning
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: BLOCK
+
+  - pattern: authless_endpoint
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+  - pattern: unrestricted_file_read
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+  - pattern: unrestricted_file_write
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: BLOCK
+
+  - pattern: env_exposure
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+  - pattern: ssrf
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+  - pattern: cors_misconfiguration
+    verdict: CONDITIONAL
+    environments:
+      production: CONDITIONAL
+      development: ALLOW
+
+  - pattern: allowlist_bypass
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+  - pattern: hidden_transport
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: BLOCK
+
+  - pattern: config_to_execution
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: BLOCK
+
+  - pattern: runtime_only_danger
+    verdict: CONDITIONAL
+    environments:
+      production: CONDITIONAL
+      development: ALLOW
+
+  - pattern: ai_config_injection
+    verdict: BLOCK
+    environments:
+      production: BLOCK
+      development: CONDITIONAL
+
+defaults:
+  unknown_pattern: CONDITIONAL
+  no_findings: ALLOW

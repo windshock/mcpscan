@@ -1,0 +1,11 @@
+{
+  "scanner_name": "cisco-scanner",
+  "server_name": "normal-realistic",
+  "target": "/servers/normal-realistic",
+  "status": "skipped",
+  "timestamp": "2026-04-22T23:17:32.980514+00:00",
+  "error": null,
+  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
+  "notes": [],
+  "evidence": {}
+}

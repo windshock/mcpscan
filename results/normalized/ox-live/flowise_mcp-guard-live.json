@@ -1,0 +1,55 @@
+{
+  "target": "flowise",
+  "target_type": "ox_live",
+  "product_name": "Flowise",
+  "scanner_name": "mcp-guard-live",
+  "timestamp": "2026-04-22T23:19:34.540936+00:00",
+  "source_url": "https://github.com/FlowiseAI/Flowise",
+  "launch_kind": "docker_image",
+  "launch_status": "success",
+  "health_status": "reachable",
+  "scan_status": "success",
+  "failure_reason": null,
+  "expected_findings": [
+    "config_to_execution",
+    "allowlist_bypass"
+  ],
+  "optional_findings": [],
+  "detected_findings": [
+    "config_to_execution",
+    "allowlist_bypass"
+  ],
+  "true_positives": [
+    "allowlist_bypass",
+    "config_to_execution"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "expected_launch_success": true,
+  "launch_matches_expectation": true,
+  "expected_health_status": "reachable",
+  "health_matches_expectation": true,
+  "expected_scan_status": "success",
+  "scan_matches_expectation": true,
+  "notes": [],
+  "evidence": {
+    "launch_command": [
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      "mcpscan-ox-flowise",
+      "--label",
+      "mcpscan.ox-live=true",
+      "-e",
+      "PORT=3000",
+      "-p",
+      "33000:3000",
+      "flowiseai/flowise:latest"
+    ],
+    "health": "results/raw/ox-live/evidence/flowise/health.json",
+    "launch_logs": "results/raw/ox-live/evidence/flowise/launch.log",
+    "scan_stdout": "results/raw/ox-live/evidence/flowise/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/flowise/scan.stderr"
+  }
+}

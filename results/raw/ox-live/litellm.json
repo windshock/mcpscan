@@ -1,0 +1,43 @@
+{
+  "target_type": "ox_live",
+  "product_id": "litellm",
+  "product_name": "LiteLLM",
+  "source_url": "https://github.com/BerriAI/litellm",
+  "timestamp": "2026-04-22T23:22:10.906383+00:00",
+  "launch_kind": "docker_image",
+  "launch_status": "failed",
+  "health_status": "unreachable",
+  "scan_status": "success",
+  "failure_reason": "command_failed",
+  "notes": [
+    "write /var/lib/docker/tmp/GetImageBlob2755048035: no space left on device"
+  ],
+  "evidence": {
+    "scan_stdout": "results/raw/ox-live/evidence/litellm/scan.stdout",
+    "scan_stderr": "results/raw/ox-live/evidence/litellm/scan.stderr"
+  },
+  "scan_mode": "config_fixture",
+  "scan_result": {
+    "target": "config_json",
+    "risk": "CRITICAL",
+    "policy_verdict": "BLOCK",
+    "environment": "production",
+    "findings": [
+      "config_to_execution"
+    ],
+    "verdicts": [
+      {
+        "pattern": "config_to_execution",
+        "severity": "CRITICAL",
+        "verdict": "BLOCK",
+        "indicator": "mcpServers.litellm_attack.command = bash"
+      }
+    ],
+    "recommendations": [
+      {
+        "pattern": "config_to_execution",
+        "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+      }
+    ]
+  }
+}

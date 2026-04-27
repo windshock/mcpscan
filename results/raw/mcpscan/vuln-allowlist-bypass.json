@@ -1,0 +1,18 @@
+[
+  {
+    "file": "/servers/vuln-allowlist-bypass/src/server.ts",
+    "rule_id": "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "severity": "ERROR",
+    "risk": "HIGH",
+    "explanation": "中风险：检测到系统命令执行\n- 命令调用: fullCmd\n- 风险级别: 中风险 - 系统命令执行\n",
+    "class": "Suspected malicious code in the tool."
+  },
+  {
+    "file": "/servers/vuln-allowlist-bypass/src/server.ts",
+    "rule_id": "opt.mcpscan.src.mcpscan.rules.detect-command-execution",
+    "severity": "ERROR",
+    "risk": "HIGH",
+    "explanation": "中风险：检测到系统命令执行\n- 命令调用: fullCmd\n- 风险级别: 中风险 - 系统命令执行\n",
+    "class": "Suspected malicious code in the tool."
+  }
+]

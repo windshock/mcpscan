@@ -1,0 +1,17 @@
+pyproject.toml
+mcp_guard/__init__.py
+mcp_guard/__main__.py
+mcp_guard/cli.py
+mcp_guard/discovery.py
+mcp_guard/patterns.py
+mcp_guard/policy.py
+mcp_guard/scanner.py
+mcp_guard.egg-info/PKG-INFO
+mcp_guard.egg-info/SOURCES.txt
+mcp_guard.egg-info/dependency_links.txt
+mcp_guard.egg-info/entry_points.txt
+mcp_guard.egg-info/requires.txt
+mcp_guard.egg-info/top_level.txt
+tests/test_cli.py
+tests/test_discovery.py
+tests/test_scanner.py

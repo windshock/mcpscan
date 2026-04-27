@@ -1,0 +1,63 @@
+Running initialization script...
+2026-04-24 02:46:21,002 INFO Set uid to user 0 succeeded
+2026-04-24 02:46:21,002 INFO Set uid to user 0 succeeded
+2026-04-24 02:46:21,005 INFO RPC interface 'supervisor' initialized
+2026-04-24 02:46:21,005 INFO RPC interface 'supervisor' initialized
+2026-04-24 02:46:21,005 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2026-04-24 02:46:21,005 CRIT Server 'unix_http_server' running without any HTTP authentication checking
+2026-04-24 02:46:21,005 INFO supervisord started with pid 1
+2026-04-24 02:46:21,005 INFO supervisord started with pid 1
+2026-04-24 02:46:22,011 INFO spawned: 'the_listener' with pid 21
+2026-04-24 02:46:22,011 INFO spawned: 'the_listener' with pid 21
+2026-04-24 02:46:22,013 INFO spawned: 'run_cron' with pid 22
+2026-04-24 02:46:22,013 INFO spawned: 'run_cron' with pid 22
+2026-04-24 02:46:22,014 INFO spawned: 'run_searxng' with pid 23
+2026-04-24 02:46:22,014 INFO spawned: 'run_searxng' with pid 23
+2026-04-24 02:46:22,016 INFO spawned: 'run_sshd' with pid 24
+2026-04-24 02:46:22,016 INFO spawned: 'run_sshd' with pid 24
+2026-04-24 02:46:22,018 INFO spawned: 'run_tunnel_api' with pid 25
+2026-04-24 02:46:22,018 INFO spawned: 'run_tunnel_api' with pid 25
+2026-04-24 02:46:22,020 INFO spawned: 'run_ui' with pid 26
+2026-04-24 02:46:22,020 INFO spawned: 'run_ui' with pid 26
+Starting tunnel API...
+Copying files from /git/agent-zero to /a0...
+READY
+Starting A0 bootstrap manager...
+2026-04-24 02:46:23,132 INFO success: the_listener entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: the_listener entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_cron entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_cron entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_searxng entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_searxng entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_sshd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_sshd entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_tunnel_api entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_tunnel_api entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_ui entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2026-04-24 02:46:23,132 INFO success: run_ui entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+ * Serving Flask app 'webapp'
+ * Debug mode: off
+2026-04-24 02:46:24,851 INFO reaped unknown pid 10 (exit status 0)
+2026-04-24 02:46:24,851 INFO reaped unknown pid 10 (exit status 0)
+Starting tunnel server...[0m
+Initializing Python framework...[0m
+Checking for data migration...[0m
+Preparing web server runtime...[0m
+Initializing Agent Zero components...[0m
+Starting UI/API server...[0m
+Agent Zero is running.[0m
+
+2026-04-24 02:46:22,097 INFO supervisor_event_listener.py: Listening for events...
+2026-04-24 02:46:24,850 ERROR:searx.searx.search.processor: Init method of engine wikidata failed due to an exception.
+Traceback (most recent call last):
+  File "/usr/local/searxng/searx-pyenv/lib/python3.13/site-packages/searx/search/processors/abstract.py", line 155, in init_engine
+    init_ok = self.engine.init(eng_setting)
+  File "/usr/local/searxng/searx-pyenv/lib/python3.13/site-packages/searx/engines/wikidata.py", line 805, in init
+    name = result['name']['value']
+           ~~~~~~^^^^^^^^
+KeyError: 'name'
+2026-04-24 02:46:24,852 ERROR:searx.search.processors: can't register engine processor: wikidata (init failed)
+INFO:     Started server process [130]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:80 (Press CTRL+C to quit)
