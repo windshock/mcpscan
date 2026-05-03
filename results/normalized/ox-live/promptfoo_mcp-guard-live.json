@@ -9,6 +9,8 @@
   "launch_status": "failed",
   "health_status": "unreachable",
   "scan_status": "success",
+  "scan_mode": "config_fixture",
+  "expected_manual_blocker": true,
   "failure_reason": "manual_blocked",
   "expected_findings": [
     "config_to_execution",

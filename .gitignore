@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+.eggs/
+
+# Local environment
+.env
+
+# Generated lab artifacts (raw data + reports are reproducible from `docker compose run --rm runner`)
+results/workdir/
+*.log
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

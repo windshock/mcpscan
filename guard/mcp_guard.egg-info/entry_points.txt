@@ -1,2 +1,0 @@
-[console_scripts]
-mcp-guard = mcp_guard.cli:main

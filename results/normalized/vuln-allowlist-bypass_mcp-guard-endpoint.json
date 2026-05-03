@@ -1,0 +1,29 @@
+{
+  "target": "vuln-allowlist-bypass",
+  "scanner_name": "mcp-guard-endpoint",
+  "timestamp": "2026-05-03T09:11:45.960698+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "allowlist_bypass",
+    "command_exec_via_args"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
+  ],
+  "detected_findings": [],
+  "true_positives": [],
+  "missed_findings": [
+    "allowlist_bypass",
+    "command_exec_via_args"
+  ],
+  "false_positives": [],
+  "policy_verdict": "ALLOW",
+  "notes": [
+    "unhandled errors in a TaskGroup (1 sub-exception)"
+  ],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "http://vuln-allowlist-bypass:3000/sse",
+  "exit_code": null
+}

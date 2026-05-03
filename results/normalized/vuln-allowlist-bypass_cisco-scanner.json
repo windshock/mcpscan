@@ -1,12 +1,15 @@
 {
   "target": "vuln-allowlist-bypass",
   "scanner_name": "cisco-scanner",
-  "timestamp": "2026-04-22T23:17:36.722481+00:00",
-  "status": "skipped",
-  "error": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
+  "timestamp": "2026-05-03T09:11:45.948921+00:00",
+  "status": "failed",
+  "error": "cisco-scanner produced invalid JSON output",
   "expected_findings": [
     "allowlist_bypass",
     "command_exec_via_args"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
   ],
   "detected_findings": [],
   "true_positives": [],
@@ -16,9 +19,14 @@
   ],
   "false_positives": [],
   "policy_verdict": null,
-  "notes": [],
-  "evidence": {},
+  "notes": [
+    "cisco-scanner produced invalid JSON output"
+  ],
+  "evidence": {
+    "stdout": "/results/evidence/lab/cisco-scanner/vuln-allowlist-bypass.stdout.log",
+    "stderr": "/results/evidence/lab/cisco-scanner/vuln-allowlist-bypass.stderr.log"
+  },
   "source_file": null,
-  "source_target": "/servers/vuln-allowlist-bypass",
+  "source_target": "http://vuln-allowlist-bypass:3000/sse",
   "exit_code": null
 }

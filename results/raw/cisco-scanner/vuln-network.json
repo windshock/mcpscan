@@ -1,11 +1,16 @@
 {
   "scanner_name": "cisco-scanner",
   "server_name": "vuln-network",
-  "target": "/servers/vuln-network",
-  "status": "skipped",
-  "timestamp": "2026-04-22T23:17:33.052085+00:00",
-  "error": null,
-  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
-  "notes": [],
-  "evidence": {}
+  "target": "http://vuln-network:3000/sse",
+  "status": "failed",
+  "timestamp": "2026-05-03T09:06:17.800494+00:00",
+  "error": "cisco-scanner produced invalid JSON output",
+  "reason": null,
+  "notes": [
+    "cisco-scanner produced invalid JSON output"
+  ],
+  "evidence": {
+    "stdout": "/results/evidence/lab/cisco-scanner/vuln-network.stdout.log",
+    "stderr": "/results/evidence/lab/cisco-scanner/vuln-network.stderr.log"
+  }
 }

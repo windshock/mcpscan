@@ -5,7 +5,7 @@
   "launch": {
     "kind": "repo_compose",
     "repo_url": "https://github.com/arc53/DocsGPT.git",
-    "ref": "72b3d944534244baed4727824f30c55bc3d82495",
+    "ref": "0.17.0",
     "compose_file": "deployment/docker-compose.yaml",
     "project_name": "mcpscan-ox-docsgpt",
     "write_files": {

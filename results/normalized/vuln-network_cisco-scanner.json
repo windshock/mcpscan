@@ -1,13 +1,16 @@
 {
   "target": "vuln-network",
   "scanner_name": "cisco-scanner",
-  "timestamp": "2026-04-22T23:17:36.724571+00:00",
-  "status": "skipped",
-  "error": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
+  "timestamp": "2026-05-03T09:11:45.951382+00:00",
+  "status": "failed",
+  "error": "cisco-scanner produced invalid JSON output",
   "expected_findings": [
     "ssrf",
     "cors_misconfiguration",
     "internal_metadata_exposure"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
   ],
   "detected_findings": [],
   "true_positives": [],
@@ -18,9 +21,14 @@
   ],
   "false_positives": [],
   "policy_verdict": null,
-  "notes": [],
-  "evidence": {},
+  "notes": [
+    "cisco-scanner produced invalid JSON output"
+  ],
+  "evidence": {
+    "stdout": "/results/evidence/lab/cisco-scanner/vuln-network.stdout.log",
+    "stderr": "/results/evidence/lab/cisco-scanner/vuln-network.stderr.log"
+  },
   "source_file": null,
-  "source_target": "/servers/vuln-network",
+  "source_target": "http://vuln-network:3000/sse",
   "exit_code": null
 }

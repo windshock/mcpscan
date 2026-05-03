@@ -1,0 +1,37 @@
+{
+  "target": "vuln-authless",
+  "scanner_name": "mcp-guard-endpoint",
+  "timestamp": "2026-05-03T09:11:45.961214+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "authless_endpoint",
+    "tool_poisoning",
+    "env_exposure",
+    "unrestricted_file_read"
+  ],
+  "expected_false_positives": [],
+  "detected_findings": [
+    "env_exposure",
+    "unrestricted_file_read",
+    "unrestricted_file_read",
+    "tool_poisoning",
+    "tool_poisoning",
+    "tool_poisoning",
+    "authless_endpoint"
+  ],
+  "true_positives": [
+    "authless_endpoint",
+    "env_exposure",
+    "tool_poisoning",
+    "unrestricted_file_read"
+  ],
+  "missed_findings": [],
+  "false_positives": [],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "http://vuln-authless:8000/sse",
+  "exit_code": null
+}

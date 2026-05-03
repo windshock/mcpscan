@@ -1,34 +1,45 @@
 {
   "target": "/servers/vuln-allowlist-bypass",
-  "risk": "CRITICAL",
+  "risk": "HIGH",
   "policy_verdict": "BLOCK",
   "environment": "production",
   "findings": [
-    "command_exec",
-    "allowlist_bypass"
+    "allowlist_bypass",
+    "allowlist_bypass",
+    "command_exec_via_args"
   ],
   "verdicts": [
-    {
-      "pattern": "command_exec",
-      "severity": "CRITICAL",
-      "verdict": "BLOCK",
-      "indicator": "exec("
-    },
     {
       "pattern": "allowlist_bypass",
       "severity": "HIGH",
       "verdict": "BLOCK",
       "indicator": "ALLOWED_COMMANDS"
+    },
+    {
+      "pattern": "allowlist_bypass",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "git -c"
+    },
+    {
+      "pattern": "command_exec_via_args",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "ALLOWED_COMMANDS + unvalidated args"
     }
   ],
   "recommendations": [
     {
-      "pattern": "command_exec",
-      "recommendation": "Remove direct command execution. Use allowlisted operations only."
+      "pattern": "allowlist_bypass",
+      "recommendation": "Validate both command name AND arguments. Use strict argument schemas."
     },
     {
       "pattern": "allowlist_bypass",
       "recommendation": "Validate both command name AND arguments. Use strict argument schemas."
+    },
+    {
+      "pattern": "command_exec_via_args",
+      "recommendation": "Validate arguments. Use a strict argument schema or argv-based exec without shell."
     }
   ]
 }

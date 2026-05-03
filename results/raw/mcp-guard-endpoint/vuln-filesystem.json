@@ -1,0 +1,345 @@
+{
+  "target": "http://vuln-filesystem:8000/sse",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "unrestricted_file_read",
+    "unrestricted_file_write",
+    "unrestricted_file_write",
+    "env_exposure",
+    "excessive_permissions",
+    "authless_endpoint"
+  ],
+  "verdicts": [
+    {
+      "pattern": "unrestricted_file_read",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "tool 'read_file' accepts path parameter"
+    },
+    {
+      "pattern": "unrestricted_file_write",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "tool 'write_file' accepts path parameter for write/delete"
+    },
+    {
+      "pattern": "unrestricted_file_write",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "tool 'delete_file' accepts path parameter for write/delete"
+    },
+    {
+      "pattern": "env_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "tool 'get_env' exposes environment variables"
+    },
+    {
+      "pattern": "excessive_permissions",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "tool surface exposes delete+env+read+write"
+    },
+    {
+      "pattern": "authless_endpoint",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "reachable without authentication: http://vuln-filesystem:8000"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "unrestricted_file_read",
+      "recommendation": "Restrict file access to allowlisted directories. Validate paths against traversal."
+    },
+    {
+      "pattern": "unrestricted_file_write",
+      "recommendation": "Restrict write access to designated directories only."
+    },
+    {
+      "pattern": "unrestricted_file_write",
+      "recommendation": "Restrict write access to designated directories only."
+    },
+    {
+      "pattern": "env_exposure",
+      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+    },
+    {
+      "pattern": "excessive_permissions",
+      "recommendation": "Reduce tool capabilities. Split tools by intent and scope each to allowlisted resources."
+    },
+    {
+      "pattern": "authless_endpoint",
+      "recommendation": "Add authentication (Bearer token, API key, or OAuth)."
+    }
+  ],
+  "probe_summary": {
+    "base_url": "http://vuln-filesystem:8000",
+    "sse_url": "http://vuln-filesystem:8000/sse",
+    "reachable": true,
+    "auth_required": false,
+    "mcp_detected": true,
+    "tool_count": 5,
+    "tool_names": [
+      "read_file",
+      "write_file",
+      "delete_file",
+      "get_env",
+      "get_env_by_prefix"
+    ],
+    "tools": [
+      {
+        "name": "read_file",
+        "description": "Reads any file on the system. No path validation or restrictions.",
+        "inputSchema": {
+          "properties": {
+            "path": {
+              "title": "Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "title": "read_fileArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "read_fileOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "write_file",
+        "description": "Writes content to any file on the system. Creates parent directories if needed.",
+        "inputSchema": {
+          "properties": {
+            "path": {
+              "title": "Path",
+              "type": "string"
+            },
+            "content": {
+              "title": "Content",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "content"
+          ],
+          "title": "write_fileArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "write_fileOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "delete_file",
+        "description": "Deletes any file on the system.",
+        "inputSchema": {
+          "properties": {
+            "path": {
+              "title": "Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "title": "delete_fileArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "delete_fileOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "get_env",
+        "description": "Returns all environment variables including secrets and API keys.",
+        "inputSchema": {
+          "properties": {},
+          "title": "get_envArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "get_envOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "get_env_by_prefix",
+        "description": "Returns environment variables matching a prefix. Useful for finding API keys and credentials.",
+        "inputSchema": {
+          "properties": {
+            "prefix": {
+              "title": "Prefix",
+              "type": "string"
+            }
+          },
+          "required": [
+            "prefix"
+          ],
+          "title": "get_env_by_prefixArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "get_env_by_prefixOutput",
+          "type": "object"
+        }
+      }
+    ],
+    "markers": [
+      "mcp_tools_listed",
+      "sse_endpoint"
+    ],
+    "checks": [
+      {
+        "url": "http://vuln-filesystem:8000/sse",
+        "kind": "mcp_sse",
+        "status": 200
+      },
+      {
+        "url": "http://vuln-filesystem:8000/health",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-filesystem:8000",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-filesystem:8000/messages",
+        "kind": "http",
+        "method": "GET",
+        "status": 400,
+        "content_type": null,
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "server": "uvicorn",
+          "content-length": "27",
+          "connection": "close"
+        },
+        "body_excerpt": "Invalid Content-Type header"
+      }
+    ],
+    "hidden_probes": [
+      {
+        "url": "http://vuln-filesystem:8000/api/connectors",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-filesystem:8000/api/transport",
+        "kind": "http",
+        "method": "POST",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-filesystem:8000/api/config",
+        "kind": "http",
+        "method": "PUT",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      }
+    ],
+    "error": null
+  }
+}

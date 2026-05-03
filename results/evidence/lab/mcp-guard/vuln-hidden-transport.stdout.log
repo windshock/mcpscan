@@ -4,7 +4,9 @@
   "policy_verdict": "BLOCK",
   "environment": "production",
   "findings": [
-    "hidden_transport"
+    "hidden_transport",
+    "connector_metadata_exposure",
+    "config_injection"
   ],
   "verdicts": [
     {
@@ -12,12 +14,32 @@
       "severity": "HIGH",
       "verdict": "BLOCK",
       "indicator": "/api/transport"
+    },
+    {
+      "pattern": "connector_metadata_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "/api/connectors with stdio command + credentials"
+    },
+    {
+      "pattern": "config_injection",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "/api/config accepts arbitrary body"
     }
   ],
   "recommendations": [
     {
       "pattern": "hidden_transport",
       "recommendation": "Remove hidden admin endpoints or protect with strong authentication."
+    },
+    {
+      "pattern": "connector_metadata_exposure",
+      "recommendation": "Do not expose connector configuration over HTTP. Keep credentials in protected secrets."
+    },
+    {
+      "pattern": "config_injection",
+      "recommendation": "Remove ad-hoc config-apply endpoints or gate them behind strong auth and validation."
     }
   ]
 }

@@ -1,0 +1,255 @@
+{
+  "target": "http://vuln-runtime-only:8000/sse",
+  "risk": "HIGH",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "authless_endpoint"
+  ],
+  "verdicts": [
+    {
+      "pattern": "authless_endpoint",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "reachable without authentication: http://vuln-runtime-only:8000"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "authless_endpoint",
+      "recommendation": "Add authentication (Bearer token, API key, or OAuth)."
+    }
+  ],
+  "probe_summary": {
+    "base_url": "http://vuln-runtime-only:8000",
+    "sse_url": "http://vuln-runtime-only:8000/sse",
+    "reachable": true,
+    "auth_required": false,
+    "mcp_detected": true,
+    "tool_count": 4,
+    "tool_names": [
+      "get_report",
+      "health_check",
+      "debug_dump",
+      "query_logs"
+    ],
+    "tools": [
+      {
+        "name": "get_report",
+        "description": "Generates a system report in the specified format. Supported formats: text, json, csv.",
+        "inputSchema": {
+          "properties": {
+            "format": {
+              "default": "text",
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          "title": "get_reportArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "get_reportOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "health_check",
+        "description": "Performs a health check on the specified component. Components: all, database, cache, network.",
+        "inputSchema": {
+          "properties": {
+            "component": {
+              "default": "all",
+              "title": "Component",
+              "type": "string"
+            }
+          },
+          "title": "health_checkArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "health_checkOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "debug_dump",
+        "description": "Returns debug information about the current request context.",
+        "inputSchema": {
+          "properties": {
+            "request_headers": {
+              "additionalProperties": true,
+              "default": {},
+              "title": "Request Headers",
+              "type": "object"
+            }
+          },
+          "title": "debug_dumpArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "debug_dumpOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "query_logs",
+        "description": "Queries server logs with an optional filter. Default: recent entries only.",
+        "inputSchema": {
+          "properties": {
+            "filter": {
+              "default": "recent",
+              "title": "Filter",
+              "type": "string"
+            }
+          },
+          "title": "query_logsArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "query_logsOutput",
+          "type": "object"
+        }
+      }
+    ],
+    "markers": [
+      "mcp_tools_listed",
+      "sse_endpoint"
+    ],
+    "checks": [
+      {
+        "url": "http://vuln-runtime-only:8000/sse",
+        "kind": "mcp_sse",
+        "status": 200
+      },
+      {
+        "url": "http://vuln-runtime-only:8000/health",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-runtime-only:8000",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-runtime-only:8000/messages",
+        "kind": "http",
+        "method": "GET",
+        "status": 400,
+        "content_type": null,
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "server": "uvicorn",
+          "content-length": "27",
+          "connection": "close"
+        },
+        "body_excerpt": "Invalid Content-Type header"
+      }
+    ],
+    "hidden_probes": [
+      {
+        "url": "http://vuln-runtime-only:8000/api/connectors",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-runtime-only:8000/api/transport",
+        "kind": "http",
+        "method": "POST",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-runtime-only:8000/api/config",
+        "kind": "http",
+        "method": "PUT",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      }
+    ],
+    "error": null
+  }
+}

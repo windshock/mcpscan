@@ -1,11 +1,53 @@
 {
-  "scanner_name": "cisco-scanner",
-  "server_name": "normal-realistic",
-  "target": "/servers/normal-realistic",
-  "status": "skipped",
-  "timestamp": "2026-04-22T23:17:32.980514+00:00",
-  "error": null,
-  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
-  "notes": [],
-  "evidence": {}
+  "server_url": "http://normal-realistic:8000/sse",
+  "scan_results": [
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "read_file",
+      "tool_description": "Reads a file from the /data directory only. Paths outside /data are rejected.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "search_docs",
+      "tool_description": "Searches internal documentation. Returns matching document titles.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "get_config",
+      "tool_description": "Returns a configuration value. Only non-sensitive keys are allowed.",
+      "item_type": "tool"
+    }
+  ],
+  "requested_analyzers": [
+    "yara"
+  ]
 }

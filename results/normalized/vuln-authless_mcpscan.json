@@ -1,7 +1,7 @@
 {
   "target": "vuln-authless",
   "scanner_name": "mcpscan",
-  "timestamp": "2026-04-22T23:17:36.718566+00:00",
+  "timestamp": "2026-05-03T09:11:45.944508+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
@@ -10,6 +10,7 @@
     "env_exposure",
     "unrestricted_file_read"
   ],
+  "expected_false_positives": [],
   "detected_findings": [],
   "true_positives": [],
   "missed_findings": [

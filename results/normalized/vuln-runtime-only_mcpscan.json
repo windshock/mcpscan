@@ -1,13 +1,17 @@
 {
   "target": "vuln-runtime-only",
   "scanner_name": "mcpscan",
-  "timestamp": "2026-04-22T23:17:36.720562+00:00",
+  "timestamp": "2026-05-03T09:11:45.946669+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
     "runtime_only_danger",
     "conditional_command_exec",
     "static_analysis_bypass"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint",
+    "internal_metadata_exposure"
   ],
   "detected_findings": [
     "opt.mcpscan.src.mcpscan.rules.detect-command-execution",

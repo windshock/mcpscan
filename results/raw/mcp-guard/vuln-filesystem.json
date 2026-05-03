@@ -6,26 +6,33 @@
   "findings": [
     "unrestricted_file_read",
     "unrestricted_file_write",
-    "env_exposure"
+    "env_exposure",
+    "excessive_permissions"
   ],
   "verdicts": [
     {
       "pattern": "unrestricted_file_read",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "open(path"
+      "indicator": "no path validation"
     },
     {
       "pattern": "unrestricted_file_write",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "write_file(path"
+      "indicator": "write_file(path) without restriction"
     },
     {
       "pattern": "env_exposure",
       "severity": "HIGH",
       "verdict": "BLOCK",
       "indicator": "dict(os.environ)"
+    },
+    {
+      "pattern": "excessive_permissions",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "delete+env+read+write"
     }
   ],
   "recommendations": [
@@ -40,6 +47,10 @@
     {
       "pattern": "env_exposure",
       "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+    },
+    {
+      "pattern": "excessive_permissions",
+      "recommendation": "Reduce tool capabilities. Split tools by intent and scope each to allowlisted resources."
     }
   ]
 }

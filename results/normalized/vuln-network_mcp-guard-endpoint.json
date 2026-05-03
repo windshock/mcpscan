@@ -1,0 +1,34 @@
+{
+  "target": "vuln-network",
+  "scanner_name": "mcp-guard-endpoint",
+  "timestamp": "2026-05-03T09:11:45.963276+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "ssrf",
+    "cors_misconfiguration",
+    "internal_metadata_exposure"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
+  ],
+  "detected_findings": [
+    "cors_misconfiguration"
+  ],
+  "true_positives": [
+    "cors_misconfiguration"
+  ],
+  "missed_findings": [
+    "internal_metadata_exposure",
+    "ssrf"
+  ],
+  "false_positives": [],
+  "policy_verdict": "CONDITIONAL",
+  "notes": [
+    "unhandled errors in a TaskGroup (1 sub-exception)"
+  ],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "http://vuln-network:3000/sse",
+  "exit_code": null
+}

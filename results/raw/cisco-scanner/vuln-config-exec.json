@@ -1,11 +1,53 @@
 {
-  "scanner_name": "cisco-scanner",
-  "server_name": "vuln-config-exec",
-  "target": "/servers/vuln-config-exec",
-  "status": "skipped",
-  "timestamp": "2026-04-22T23:17:33.096373+00:00",
-  "error": null,
-  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
-  "notes": [],
-  "evidence": {}
+  "server_url": "http://vuln-config-exec:8000/sse",
+  "scan_results": [
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "apply_config",
+      "tool_description": "Applies a configuration JSON. The config may contain a 'command' field that will be executed.\n    Accepts JSON like: {\"command\": \"echo hello\", \"args\": [...]}",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "load_mcp_config",
+      "tool_description": "Loads an MCP configuration from a remote URL and applies it.\n    The fetched config is parsed and any commands within are executed.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "update_settings",
+      "tool_description": "Updates a server setting. If the key is 'startup_command', the value is executed as a command.",
+      "item_type": "tool"
+    }
+  ],
+  "requested_analyzers": [
+    "yara"
+  ]
 }

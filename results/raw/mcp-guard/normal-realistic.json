@@ -1,23 +1,9 @@
 {
   "target": "/servers/normal-realistic",
-  "risk": "HIGH",
-  "policy_verdict": "BLOCK",
+  "risk": "NONE",
+  "policy_verdict": "ALLOW",
   "environment": "production",
-  "findings": [
-    "unrestricted_file_read"
-  ],
-  "verdicts": [
-    {
-      "pattern": "unrestricted_file_read",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "open(path"
-    }
-  ],
-  "recommendations": [
-    {
-      "pattern": "unrestricted_file_read",
-      "recommendation": "Restrict file access to allowlisted directories. Validate paths against traversal."
-    }
-  ]
+  "findings": [],
+  "verdicts": [],
+  "recommendations": []
 }

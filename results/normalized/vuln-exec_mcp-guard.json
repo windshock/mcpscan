@@ -1,12 +1,15 @@
 {
   "target": "vuln-exec",
   "scanner_name": "mcp-guard",
-  "timestamp": "2026-04-22T23:17:36.728081+00:00",
+  "timestamp": "2026-05-03T09:11:45.956244+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
     "command_exec",
     "tool_poisoning"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
   ],
   "detected_findings": [
     "command_exec",

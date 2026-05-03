@@ -1,11 +1,95 @@
 {
-  "scanner_name": "cisco-scanner",
-  "server_name": "vuln-filesystem",
-  "target": "/servers/vuln-filesystem",
-  "status": "skipped",
-  "timestamp": "2026-04-22T23:17:33.066727+00:00",
-  "error": null,
-  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
-  "notes": [],
-  "evidence": {}
+  "server_url": "http://vuln-filesystem:8000/sse",
+  "scan_results": [
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "read_file",
+      "tool_description": "Reads any file on the system. No path validation or restrictions.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "write_file",
+      "tool_description": "Writes content to any file on the system. Creates parent directories if needed.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "delete_file",
+      "tool_description": "Deletes any file on the system.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "get_env",
+      "tool_description": "Returns all environment variables including secrets and API keys.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": false,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "HIGH",
+          "threat_names": [
+            "TOOL POISONING"
+          ],
+          "threat_summary": "Detected 1 threat: tool poisoning",
+          "total_findings": 1,
+          "mcp_taxonomies": [
+            {
+              "scanner_category": "SUSPICIOUS CODE EXECUTION",
+              "aitech": "AITech-12.1",
+              "aitech_name": "Tool Exploitation",
+              "aisubtech": "AISubtech-12.1.2",
+              "aisubtech_name": "Tool Poisoning",
+              "description": "Corrupting, modifying, or degrading the functionality, outputs, or behavior of tools used by agents through data poisoning, configuration tampering, or behavioral manipulation, causing deceptive or malicious outputs, privilege escalation, or propagation of altered data."
+            }
+          ]
+        }
+      },
+      "tool_name": "get_env_by_prefix",
+      "tool_description": "Returns environment variables matching a prefix. Useful for finding API keys and credentials.",
+      "item_type": "tool"
+    }
+  ],
+  "requested_analyzers": [
+    "yara"
+  ]
 }

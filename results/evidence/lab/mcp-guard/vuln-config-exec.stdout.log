@@ -4,42 +4,42 @@
   "policy_verdict": "BLOCK",
   "environment": "production",
   "findings": [
-    "command_exec",
-    "ssrf",
-    "config_to_execution"
+    "config_to_execution",
+    "remote_config_loading",
+    "command_exec"
   ],
   "verdicts": [
-    {
-      "pattern": "command_exec",
-      "severity": "CRITICAL",
-      "verdict": "BLOCK",
-      "indicator": "subprocess.run"
-    },
-    {
-      "pattern": "ssrf",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "urllib.request"
-    },
     {
       "pattern": "config_to_execution",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
       "indicator": "apply_config"
+    },
+    {
+      "pattern": "remote_config_loading",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "load_mcp_config"
+    },
+    {
+      "pattern": "command_exec",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "subprocess.run"
     }
   ],
   "recommendations": [
     {
-      "pattern": "command_exec",
-      "recommendation": "Remove direct command execution. Use allowlisted operations only."
-    },
-    {
-      "pattern": "ssrf",
-      "recommendation": "Implement URL allowlisting. Block private/internal IP ranges."
-    },
-    {
       "pattern": "config_to_execution",
       "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+    },
+    {
+      "pattern": "remote_config_loading",
+      "recommendation": "Never fetch and apply config from untrusted URLs. Pin config sources and verify integrity."
+    },
+    {
+      "pattern": "command_exec",
+      "recommendation": "Remove direct command execution. Use allowlisted operations only."
     }
   ]
 }

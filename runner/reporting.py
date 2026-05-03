@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any
 
 
-LAB_SCANNERS = ("mcpscan", "cisco-scanner", "mcp-guard")
+LAB_SCANNERS = ("mcpscan", "cisco-scanner", "mcp-guard", "mcp-guard-endpoint")
+OPTIONAL_LAB_SCANNERS = frozenset({"mcp-guard-endpoint"})
 
 
 def load_json(path: Path, default: Any = None) -> Any:
@@ -69,6 +70,7 @@ def build_normalized(
         "status": status,
         "error": error,
         "expected_findings": expected_findings,
+        "expected_false_positives": expected_fp,
         "detected_findings": detected,
         "true_positives": true_positives,
         "missed_findings": missed,
@@ -163,10 +165,52 @@ def normalize_mcpscan(raw: Any, server_name: str, expected: dict) -> dict[str, A
     return normalize_lab_result("mcpscan", raw, server_name, expected, findings)
 
 
+CISCO_THREAT_MAP = {
+    "PROMPT INJECTION": "tool_poisoning",
+    "TOOL POISONING": "tool_poisoning",
+    "TOOL SHADOWING": "tool_poisoning",
+    "GOAL MANIPULATION": "tool_poisoning",
+    "COERCIVE INJECTION": "tool_poisoning",
+    "CODE EXECUTION": "command_exec",
+    "INJECTION ATTACK": "command_exec",
+    "INJECTION ATTACKS": "command_exec",
+    "COMMAND INJECTION": "command_exec",
+    "SCRIPT INJECTION": "command_exec",
+    "SQL INJECTION": "command_exec",
+    "TEMPLATE INJECTION": "command_exec",
+    "SYSTEM MANIPULATION": "command_exec",
+    "CREDENTIAL HARVESTING": "env_exposure",
+    "DATA EXFILTRATION": "ssrf",
+}
+
+
+def _map_cisco_threat(name: str) -> str:
+    if not name:
+        return "unknown"
+    return CISCO_THREAT_MAP.get(name.upper(), name.lower().replace(" ", "_"))
+
+
 def normalize_cisco(raw: dict, server_name: str, expected: dict) -> dict[str, Any]:
-    findings = []
-    for result in raw.get("findings") or []:
-        findings.append(result.get("type", result.get("rule", "unknown")))
+    findings: list[str] = []
+
+    scan_results = raw.get("scan_results") if isinstance(raw, dict) else None
+    if isinstance(scan_results, list):
+        for tool_result in scan_results:
+            if not isinstance(tool_result, dict) or tool_result.get("is_safe", True):
+                continue
+            for analyzer_data in (tool_result.get("findings") or {}).values():
+                if not isinstance(analyzer_data, dict):
+                    continue
+                severity = str(analyzer_data.get("severity", "")).upper()
+                if severity in ("", "SAFE"):
+                    continue
+                for threat in analyzer_data.get("threat_names") or []:
+                    findings.append(_map_cisco_threat(str(threat)))
+    elif isinstance(raw.get("findings"), list):
+        for result in raw["findings"]:
+            if isinstance(result, dict):
+                findings.append(result.get("type", result.get("rule", "unknown")))
+
     return normalize_lab_result("cisco-scanner", raw, server_name, expected, findings)
 
 
@@ -191,6 +235,8 @@ def build_failed_ox_result(product_id: str, expected: dict[str, Any], error: str
         "launch_status": "failed",
         "health_status": "unreachable",
         "scan_status": "failed",
+        "scan_mode": expected.get("scan_mode"),
+        "expected_manual_blocker": launch_expected is False,
         "failure_reason": "raw_result_unavailable",
         "expected_findings": expected.get("expected_findings", []),
         "optional_findings": expected.get("optional_findings", []),
@@ -225,6 +271,10 @@ def normalize_ox_live(raw: dict, expected: dict) -> dict[str, Any]:
     actual_health = raw.get("health_status")
     actual_launch_success = raw.get("launch_status") == "success"
 
+    scan_mode = raw.get("scan_mode")
+    launch_kind = raw.get("launch_kind")
+    is_manual_blocked = launch_kind == "manual_blocked" or launch_expected is False
+
     return {
         "target": raw["product_id"],
         "target_type": "ox_live",
@@ -232,10 +282,12 @@ def normalize_ox_live(raw: dict, expected: dict) -> dict[str, Any]:
         "scanner_name": "mcp-guard-live",
         "timestamp": raw.get("timestamp"),
         "source_url": raw.get("source_url"),
-        "launch_kind": raw.get("launch_kind"),
+        "launch_kind": launch_kind,
         "launch_status": raw.get("launch_status"),
         "health_status": actual_health,
         "scan_status": raw.get("scan_status"),
+        "scan_mode": scan_mode,
+        "expected_manual_blocker": is_manual_blocked,
         "failure_reason": raw.get("failure_reason"),
         "expected_findings": expected_findings,
         "optional_findings": optional_findings,
@@ -307,13 +359,15 @@ def generate_comparison_report(all_normalized: list[dict[str, Any]]) -> str:
             )
 
     lines.append("\n## Cross-Scanner Comparison\n")
-    lines.append("| Server | mcpscan | cisco-scanner | mcp-guard |")
-    lines.append("|--------|---------|---------------|-----------|")
+    present_scanners = [scanner for scanner in LAB_SCANNERS if scanner in scanners]
+    header_cells = ["Server"] + present_scanners
+    lines.append("| " + " | ".join(header_cells) + " |")
+    lines.append("|" + "|".join("-" * max(3, len(cell) + 2) for cell in header_cells) + "|")
 
     server_names = sorted({normalized["target"] for normalized in all_normalized})
     for server in server_names:
         row = [server]
-        for scanner in LAB_SCANNERS:
+        for scanner in present_scanners:
             matches = [n for n in all_normalized if n["target"] == server and n["scanner_name"] == scanner]
             if matches:
                 match = matches[0]
@@ -327,6 +381,63 @@ def generate_comparison_report(all_normalized: list[dict[str, Any]]) -> str:
                 row.append("N/A")
         lines.append("| " + " | ".join(row) + " |")
 
+    if "mcp-guard" in scanners and "mcp-guard-endpoint" in scanners:
+        lines.append("\n## mcp-guard combined (source ∪ endpoint)\n")
+        combined: list[dict[str, Any]] = []
+        for server in server_names:
+            source = next(
+                (n for n in all_normalized if n["target"] == server and n["scanner_name"] == "mcp-guard"),
+                None,
+            )
+            endpoint = next(
+                (n for n in all_normalized if n["target"] == server and n["scanner_name"] == "mcp-guard-endpoint"),
+                None,
+            )
+            if not (source or endpoint):
+                continue
+            base = source or endpoint
+            expected = set(base.get("expected_findings", []))
+            expected_fp = set(base.get("expected_false_positives", []))
+            detected: set[str] = set()
+            if source:
+                detected |= set(source.get("detected_findings", []))
+            if endpoint:
+                detected |= set(endpoint.get("detected_findings", []))
+            tp = sorted(detected & expected)
+            fn = sorted(expected - detected)
+            fp = sorted(detected - expected - expected_fp)
+            combined.append({
+                "target": server,
+                "scanner_name": "mcp-guard-combined",
+                "expected_findings": sorted(expected),
+                "true_positives": tp,
+                "missed_findings": fn,
+                "false_positives": fp,
+                "status": "success",
+            })
+
+        if combined:
+            tp_total = sum(len(c["true_positives"]) for c in combined)
+            fp_total = sum(len(c["false_positives"]) for c in combined)
+            fn_total = sum(len(c["missed_findings"]) for c in combined)
+            expected_total = sum(len(c["expected_findings"]) for c in combined)
+            lines.append(f"- **True Positives**: {tp_total}")
+            lines.append(f"- **False Positives**: {fp_total}")
+            lines.append(f"- **False Negatives (Missed)**: {fn_total}")
+            lines.append(f"- **Total Expected Findings**: {expected_total}")
+            if expected_total:
+                lines.append(f"- **Recall**: {tp_total/expected_total:.1%}")
+            if tp_total + fp_total:
+                lines.append(f"- **Precision**: {tp_total/(tp_total+fp_total):.1%}")
+            lines.append("")
+            for c in combined:
+                lines.append(
+                    f"  {lab_status_label(c)} **{c['target']}**: "
+                    f"TP={len(c['true_positives'])} "
+                    f"FP={len(c['false_positives'])} "
+                    f"FN={len(c['missed_findings'])}"
+                )
+
     return "\n".join(lines)
 
 
@@ -338,20 +449,32 @@ def generate_ox_live_report(all_normalized: list[dict[str, Any]]) -> str:
         lines.append("No OX live results were found.")
         return "\n".join(lines)
 
-    launch_success = sum(1 for result in all_normalized if result["launch_status"] == "success")
-    scan_success = sum(1 for result in all_normalized if result["scan_status"] == "success")
-    reachable = sum(1 for result in all_normalized if result["health_status"] == "reachable")
-    blocked = sum(1 for result in all_normalized if result["failure_reason"])
+    launchable = [r for r in all_normalized if not r.get("expected_manual_blocker")]
+    expected_manual = [r for r in all_normalized if r.get("expected_manual_blocker")]
+    launch_success = sum(1 for result in launchable if result["launch_status"] == "success")
+    reachable = sum(1 for result in launchable if result["health_status"] == "reachable")
+    fixture_scans = sum(1 for result in all_normalized if result.get("scan_mode") == "config_fixture" and result["scan_status"] == "success")
+    live_scans = sum(1 for result in all_normalized if result.get("scan_mode") == "endpoint" and result["scan_status"] == "success")
+    unexpected_failures = sum(
+        1
+        for result in launchable
+        if result["launch_status"] != "success" and result.get("launch_matches_expectation") is False
+    )
 
     lines.append(f"- **Products**: {len(all_normalized)}")
-    lines.append(f"- **Launch Success**: {launch_success}")
-    lines.append(f"- **Health Reachable**: {reachable}")
-    lines.append(f"- **Scan Success**: {scan_success}")
-    lines.append(f"- **Failures / Blockers Recorded**: {blocked}")
+    lines.append(f"- **Launch-expected products**: {len(launchable)} (success: {launch_success}, reachable: {reachable})")
+    lines.append(f"- **Expected manual blockers**: {len(expected_manual)} (no self-hosted launch path)")
+    lines.append(f"- **Fixture-only scans (config_fixture)**: {fixture_scans}")
+    lines.append(f"- **Live endpoint scans**: {live_scans}")
+    lines.append(f"- **Unexpected launch failures**: {unexpected_failures}")
+    lines.append("")
+    lines.append(
+        "> Note: scan results from `config_fixture` mode validate that mcp-guard detects the OX research configuration; they do **not** scan a running product. Live endpoint scans are only counted when `scan_mode == endpoint`."
+    )
     lines.append("")
 
-    lines.append("| Product | Launch | Health | Scan | Findings | Reason |")
-    lines.append("|---------|--------|--------|------|----------|--------|")
+    lines.append("| Product | Launch | Health | Scan (mode) | Findings | Expected Block | Reason |")
+    lines.append("|---------|--------|--------|-------------|----------|----------------|--------|")
 
     for result in sorted(all_normalized, key=lambda item: item["target"]):
         findings = (
@@ -359,7 +482,11 @@ def generate_ox_live_report(all_normalized: list[dict[str, Any]]) -> str:
             f"FP:{len(result['false_positives'])}/"
             f"FN:{len(result['missed_findings'])}"
         )
+        scan_cell = result["scan_status"]
+        if result.get("scan_mode"):
+            scan_cell = f"{scan_cell} ({result['scan_mode']})"
         reason = result["failure_reason"] or "-"
+        manual_blocker = "yes" if result.get("expected_manual_blocker") else "no"
         lines.append(
             "| "
             + " | ".join(
@@ -367,8 +494,9 @@ def generate_ox_live_report(all_normalized: list[dict[str, Any]]) -> str:
                     result["target"],
                     result["launch_status"],
                     result["health_status"],
-                    result["scan_status"],
+                    scan_cell,
                     findings,
+                    manual_blocker,
                     reason,
                 ]
             )
@@ -381,7 +509,12 @@ def generate_ox_live_report(all_normalized: list[dict[str, Any]]) -> str:
         lines.append(f"- Source: {result['source_url']}")
         lines.append(f"- Launch: {result['launch_status']} via `{result['launch_kind']}`")
         lines.append(f"- Health: {result['health_status']}")
-        lines.append(f"- Scan: {result['scan_status']}")
+        scan_line = f"- Scan: {result['scan_status']}"
+        if result.get("scan_mode"):
+            scan_line += f" (mode: `{result['scan_mode']}`)"
+        lines.append(scan_line)
+        if result.get("expected_manual_blocker"):
+            lines.append("- Expected Manual Blocker: yes (no official self-hosted launch path)")
         if result["failure_reason"]:
             lines.append(f"- Failure Reason: `{result['failure_reason']}`")
         lines.append(f"- Expected Findings: {', '.join(result['expected_findings']) or 'none'}")
@@ -410,6 +543,8 @@ def generate_lab_outputs(results_dir: Path, expected_file: Path) -> list[dict[st
 
     for scanner_name in LAB_SCANNERS:
         scanner_dir = raw_dir / scanner_name
+        if not scanner_dir.exists() and scanner_name in OPTIONAL_LAB_SCANNERS:
+            continue
         discovered_servers = {raw_file.stem for raw_file in scanner_dir.glob("*.json")} if scanner_dir.exists() else set()
         server_names = sorted(set(expected_servers) | discovered_servers)
 
@@ -432,6 +567,9 @@ def generate_lab_outputs(results_dir: Path, expected_file: Path) -> list[dict[st
                 )
             elif scanner_name == "cisco-scanner":
                 normalized = normalize_cisco(raw, server_name, server_expected)
+            elif scanner_name == "mcp-guard-endpoint":
+                normalized = normalize_guard(raw, server_name, server_expected)
+                normalized["scanner_name"] = "mcp-guard-endpoint"
             else:
                 normalized = normalize_guard(raw, server_name, server_expected)
 

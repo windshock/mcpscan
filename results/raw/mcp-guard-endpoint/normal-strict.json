@@ -1,0 +1,223 @@
+{
+  "target": "http://normal-strict:8000/sse",
+  "risk": "HIGH",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "authless_endpoint"
+  ],
+  "verdicts": [
+    {
+      "pattern": "authless_endpoint",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "reachable without authentication: http://normal-strict:8000"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "authless_endpoint",
+      "recommendation": "Add authentication (Bearer token, API key, or OAuth)."
+    }
+  ],
+  "probe_summary": {
+    "base_url": "http://normal-strict:8000",
+    "sse_url": "http://normal-strict:8000/sse",
+    "reachable": true,
+    "auth_required": false,
+    "mcp_detected": true,
+    "tool_count": 3,
+    "tool_names": [
+      "get_time",
+      "calculate",
+      "echo"
+    ],
+    "tools": [
+      {
+        "name": "get_time",
+        "description": "Returns the current UTC time.",
+        "inputSchema": {
+          "properties": {},
+          "title": "get_timeArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "get_timeOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "calculate",
+        "description": "Evaluates a simple arithmetic expression. Only numbers and basic operators (+-*/) are allowed.",
+        "inputSchema": {
+          "properties": {
+            "expression": {
+              "title": "Expression",
+              "type": "string"
+            }
+          },
+          "required": [
+            "expression"
+          ],
+          "title": "calculateArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "calculateOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "echo",
+        "description": "Echoes back the provided message. Maximum 200 characters.",
+        "inputSchema": {
+          "properties": {
+            "message": {
+              "title": "Message",
+              "type": "string"
+            }
+          },
+          "required": [
+            "message"
+          ],
+          "title": "echoArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "echoOutput",
+          "type": "object"
+        }
+      }
+    ],
+    "markers": [
+      "mcp_tools_listed",
+      "sse_endpoint"
+    ],
+    "checks": [
+      {
+        "url": "http://normal-strict:8000/sse",
+        "kind": "mcp_sse",
+        "status": 200
+      },
+      {
+        "url": "http://normal-strict:8000/health",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-strict:8000",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-strict:8000/messages",
+        "kind": "http",
+        "method": "GET",
+        "status": 400,
+        "content_type": null,
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "27",
+          "connection": "close"
+        },
+        "body_excerpt": "Invalid Content-Type header"
+      }
+    ],
+    "hidden_probes": [
+      {
+        "url": "http://normal-strict:8000/api/connectors",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-strict:8000/api/transport",
+        "kind": "http",
+        "method": "POST",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-strict:8000/api/config",
+        "kind": "http",
+        "method": "PUT",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      }
+    ],
+    "error": null
+  }
+}

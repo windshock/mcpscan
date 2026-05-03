@@ -1,0 +1,291 @@
+{
+  "target": "http://vuln-config-exec:8000/sse",
+  "risk": "CRITICAL",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "config_to_execution",
+    "ssrf",
+    "remote_config_loading",
+    "config_to_execution",
+    "config_to_execution",
+    "authless_endpoint"
+  ],
+  "verdicts": [
+    {
+      "pattern": "config_to_execution",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "tool 'apply_config' applies a configuration that can drive execution"
+    },
+    {
+      "pattern": "ssrf",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "tool 'load_mcp_config' accepts url parameter"
+    },
+    {
+      "pattern": "remote_config_loading",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "tool 'load_mcp_config' loads configuration from a remote URL"
+    },
+    {
+      "pattern": "config_to_execution",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "tool 'load_mcp_config' applies a configuration that can drive execution"
+    },
+    {
+      "pattern": "config_to_execution",
+      "severity": "CRITICAL",
+      "verdict": "BLOCK",
+      "indicator": "tool 'update_settings' applies a configuration that can drive execution"
+    },
+    {
+      "pattern": "authless_endpoint",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "reachable without authentication: http://vuln-config-exec:8000"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "config_to_execution",
+      "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+    },
+    {
+      "pattern": "ssrf",
+      "recommendation": "Implement URL allowlisting. Block private/internal IP ranges."
+    },
+    {
+      "pattern": "remote_config_loading",
+      "recommendation": "Never fetch and apply config from untrusted URLs. Pin config sources and verify integrity."
+    },
+    {
+      "pattern": "config_to_execution",
+      "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+    },
+    {
+      "pattern": "config_to_execution",
+      "recommendation": "Never execute commands from user config. Validate and sanitize all config inputs."
+    },
+    {
+      "pattern": "authless_endpoint",
+      "recommendation": "Add authentication (Bearer token, API key, or OAuth)."
+    }
+  ],
+  "probe_summary": {
+    "base_url": "http://vuln-config-exec:8000",
+    "sse_url": "http://vuln-config-exec:8000/sse",
+    "reachable": true,
+    "auth_required": false,
+    "mcp_detected": true,
+    "tool_count": 3,
+    "tool_names": [
+      "apply_config",
+      "load_mcp_config",
+      "update_settings"
+    ],
+    "tools": [
+      {
+        "name": "apply_config",
+        "description": "Applies a configuration JSON. The config may contain a 'command' field that will be executed.\n    Accepts JSON like: {\"command\": \"echo hello\", \"args\": [...]}",
+        "inputSchema": {
+          "properties": {
+            "config_json": {
+              "title": "Config Json",
+              "type": "string"
+            }
+          },
+          "required": [
+            "config_json"
+          ],
+          "title": "apply_configArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "apply_configOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "load_mcp_config",
+        "description": "Loads an MCP configuration from a remote URL and applies it.\n    The fetched config is parsed and any commands within are executed.",
+        "inputSchema": {
+          "properties": {
+            "url": {
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "title": "load_mcp_configArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "load_mcp_configOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "update_settings",
+        "description": "Updates a server setting. If the key is 'startup_command', the value is executed as a command.",
+        "inputSchema": {
+          "properties": {
+            "key": {
+              "title": "Key",
+              "type": "string"
+            },
+            "value": {
+              "title": "Value",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key",
+            "value"
+          ],
+          "title": "update_settingsArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "update_settingsOutput",
+          "type": "object"
+        }
+      }
+    ],
+    "markers": [
+      "mcp_tools_listed",
+      "sse_endpoint"
+    ],
+    "checks": [
+      {
+        "url": "http://vuln-config-exec:8000/sse",
+        "kind": "mcp_sse",
+        "status": 200
+      },
+      {
+        "url": "http://vuln-config-exec:8000/health",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-config-exec:8000",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-config-exec:8000/messages",
+        "kind": "http",
+        "method": "GET",
+        "status": 400,
+        "content_type": null,
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "server": "uvicorn",
+          "content-length": "27",
+          "connection": "close"
+        },
+        "body_excerpt": "Invalid Content-Type header"
+      }
+    ],
+    "hidden_probes": [
+      {
+        "url": "http://vuln-config-exec:8000/api/connectors",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-config-exec:8000/api/transport",
+        "kind": "http",
+        "method": "POST",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://vuln-config-exec:8000/api/config",
+        "kind": "http",
+        "method": "PUT",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      }
+    ],
+    "error": null
+  }
+}

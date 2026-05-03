@@ -1,19 +1,21 @@
 {
   "target": "normal-realistic",
   "scanner_name": "mcp-guard",
-  "timestamp": "2026-04-22T23:17:36.725796+00:00",
+  "timestamp": "2026-05-03T09:11:45.953012+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [],
-  "detected_findings": [
+  "expected_false_positives": [
+    "file_read_limited",
+    "config_access_limited",
+    "authless_endpoint",
     "unrestricted_file_read"
   ],
+  "detected_findings": [],
   "true_positives": [],
   "missed_findings": [],
-  "false_positives": [
-    "unrestricted_file_read"
-  ],
-  "policy_verdict": "BLOCK",
+  "false_positives": [],
+  "policy_verdict": "ALLOW",
   "notes": [],
   "evidence": {},
   "source_file": null,

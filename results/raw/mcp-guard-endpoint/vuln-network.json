@@ -1,0 +1,163 @@
+{
+  "target": "http://vuln-network:3000/sse",
+  "risk": "MEDIUM",
+  "policy_verdict": "CONDITIONAL",
+  "environment": "production",
+  "findings": [
+    "cors_misconfiguration"
+  ],
+  "verdicts": [
+    {
+      "pattern": "cors_misconfiguration",
+      "severity": "MEDIUM",
+      "verdict": "CONDITIONAL",
+      "indicator": "Access-Control-Allow-Origin: *"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "cors_misconfiguration",
+      "recommendation": "Restrict CORS to specific origins. Avoid wildcard in production."
+    }
+  ],
+  "notes": [
+    "unhandled errors in a TaskGroup (1 sub-exception)"
+  ],
+  "probe_summary": {
+    "base_url": "http://vuln-network:3000",
+    "sse_url": "http://vuln-network:3000/sse",
+    "reachable": true,
+    "auth_required": null,
+    "mcp_detected": false,
+    "tool_count": 0,
+    "tool_names": [],
+    "tools": [],
+    "markers": [
+      "cors_wildcard"
+    ],
+    "checks": [
+      {
+        "url": "http://vuln-network:3000/sse",
+        "kind": "mcp_sse",
+        "status": null,
+        "error": "unhandled errors in a TaskGroup (1 sub-exception)"
+      },
+      {
+        "url": "http://vuln-network:3000/health",
+        "kind": "http",
+        "method": "GET",
+        "status": 200,
+        "content_type": "application/json; charset=utf-8",
+        "headers": {
+          "x-powered-by": "Express",
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "content-type": "application/json; charset=utf-8",
+          "content-length": "39",
+          "etag": "W/\"27-MLKzYPsp4CHuQR5xQ3B1pp5MPq4\"",
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "connection": "close"
+        },
+        "body_excerpt": "{\"status\":\"ok\",\"server\":\"vuln-network\"}"
+      },
+      {
+        "url": "http://vuln-network:3000",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/html; charset=utf-8",
+        "headers": {
+          "x-powered-by": "Express",
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "content-security-policy": "default-src 'none'",
+          "x-content-type-options": "nosniff",
+          "content-type": "text/html; charset=utf-8",
+          "content-length": "139",
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "connection": "close"
+        },
+        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+      },
+      {
+        "url": "http://vuln-network:3000/messages",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/html; charset=utf-8",
+        "headers": {
+          "x-powered-by": "Express",
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "content-security-policy": "default-src 'none'",
+          "x-content-type-options": "nosniff",
+          "content-type": "text/html; charset=utf-8",
+          "content-length": "147",
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "connection": "close"
+        },
+        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /messages</pre>\n</body>\n</html>\n"
+      }
+    ],
+    "hidden_probes": [
+      {
+        "url": "http://vuln-network:3000/api/connectors",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/html; charset=utf-8",
+        "headers": {
+          "x-powered-by": "Express",
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "content-security-policy": "default-src 'none'",
+          "x-content-type-options": "nosniff",
+          "content-type": "text/html; charset=utf-8",
+          "content-length": "153",
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "connection": "close"
+        },
+        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/connectors</pre>\n</body>\n</html>\n"
+      },
+      {
+        "url": "http://vuln-network:3000/api/transport",
+        "kind": "http",
+        "method": "POST",
+        "status": 404,
+        "content_type": "text/html; charset=utf-8",
+        "headers": {
+          "x-powered-by": "Express",
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "content-security-policy": "default-src 'none'",
+          "x-content-type-options": "nosniff",
+          "content-type": "text/html; charset=utf-8",
+          "content-length": "153",
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "connection": "close"
+        },
+        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /api/transport</pre>\n</body>\n</html>\n"
+      },
+      {
+        "url": "http://vuln-network:3000/api/config",
+        "kind": "http",
+        "method": "PUT",
+        "status": 404,
+        "content_type": "text/html; charset=utf-8",
+        "headers": {
+          "x-powered-by": "Express",
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "content-security-policy": "default-src 'none'",
+          "x-content-type-options": "nosniff",
+          "content-type": "text/html; charset=utf-8",
+          "content-length": "149",
+          "date": "Sun, 03 May 2026 09:11:41 GMT",
+          "connection": "close"
+        },
+        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /api/config</pre>\n</body>\n</html>\n"
+      }
+    ],
+    "error": "unhandled errors in a TaskGroup (1 sub-exception)"
+  }
+}

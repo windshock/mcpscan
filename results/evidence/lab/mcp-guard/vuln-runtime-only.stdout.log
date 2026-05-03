@@ -1,34 +1,67 @@
 {
   "target": "/servers/vuln-runtime-only",
-  "risk": "CRITICAL",
+  "risk": "HIGH",
   "policy_verdict": "BLOCK",
   "environment": "production",
   "findings": [
-    "command_exec",
-    "env_exposure"
+    "static_analysis_bypass",
+    "conditional_command_exec",
+    "conditional_command_exec",
+    "conditional_command_exec",
+    "runtime_only_danger"
   ],
   "verdicts": [
     {
-      "pattern": "command_exec",
-      "severity": "CRITICAL",
-      "verdict": "BLOCK",
-      "indicator": "subprocess.run"
-    },
-    {
-      "pattern": "env_exposure",
+      "pattern": "static_analysis_bypass",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "env_dump"
+      "indicator": "SECRET_TRIGGER_FORMAT"
+    },
+    {
+      "pattern": "conditional_command_exec",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "if component =="
+    },
+    {
+      "pattern": "conditional_command_exec",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "filter.startswith(\"exec:\")"
+    },
+    {
+      "pattern": "conditional_command_exec",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "request_headers.get"
+    },
+    {
+      "pattern": "runtime_only_danger",
+      "severity": "HIGH",
+      "verdict": "CONDITIONAL",
+      "indicator": "runtime-triggered subprocess gated by hardcoded value"
     }
   ],
   "recommendations": [
     {
-      "pattern": "command_exec",
-      "recommendation": "Remove direct command execution. Use allowlisted operations only."
+      "pattern": "static_analysis_bypass",
+      "recommendation": "Eliminate hidden runtime triggers. Treat all execution paths as reachable."
     },
     {
-      "pattern": "env_exposure",
-      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
+      "pattern": "conditional_command_exec",
+      "recommendation": "Remove hidden runtime-triggered command execution. Disallow shell exec entirely."
+    },
+    {
+      "pattern": "conditional_command_exec",
+      "recommendation": "Remove hidden runtime-triggered command execution. Disallow shell exec entirely."
+    },
+    {
+      "pattern": "conditional_command_exec",
+      "recommendation": "Remove hidden runtime-triggered command execution. Disallow shell exec entirely."
+    },
+    {
+      "pattern": "runtime_only_danger",
+      "recommendation": "Add runtime monitoring. Static analysis alone is insufficient for this pattern."
     }
   ]
 }

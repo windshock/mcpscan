@@ -1,7 +1,7 @@
 {
   "target": "vuln-config-exec",
   "scanner_name": "mcp-guard",
-  "timestamp": "2026-04-22T23:17:36.727539+00:00",
+  "timestamp": "2026-05-03T09:11:45.955688+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
@@ -9,21 +9,22 @@
     "remote_config_loading",
     "command_exec"
   ],
+  "expected_false_positives": [
+    "authless_endpoint",
+    "ssrf"
+  ],
   "detected_findings": [
-    "command_exec",
-    "ssrf",
-    "config_to_execution"
+    "config_to_execution",
+    "remote_config_loading",
+    "command_exec"
   ],
   "true_positives": [
     "command_exec",
-    "config_to_execution"
-  ],
-  "missed_findings": [
+    "config_to_execution",
     "remote_config_loading"
   ],
-  "false_positives": [
-    "ssrf"
-  ],
+  "missed_findings": [],
+  "false_positives": [],
   "policy_verdict": "BLOCK",
   "notes": [],
   "evidence": {},

@@ -187,7 +187,7 @@ require_command python3
 require_command mcpscan
 require_command mcp-guard
 
-mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
+mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
 
 echo "=========================================="
 echo " MCP Security Lab — Scanner Runner"
@@ -208,6 +208,23 @@ declare -A SERVERS=(
   ["vuln-hidden-transport"]="/servers/vuln-hidden-transport"
 )
 
+# In-network MCP SSE endpoints, used by both the Cisco remote scan and the
+# mcp-guard endpoint probe. Service names + container ports come from
+# docker-compose.yml.
+declare -A ENDPOINTS=(
+  ["normal-strict"]="http://normal-strict:8000/sse"
+  ["normal-realistic"]="http://normal-realistic:8000/sse"
+  ["normal-tricky"]="http://normal-tricky:8000/sse"
+  ["vuln-exec"]="http://vuln-exec:8000/sse"
+  ["vuln-authless"]="http://vuln-authless:8000/sse"
+  ["vuln-filesystem"]="http://vuln-filesystem:8000/sse"
+  ["vuln-config-exec"]="http://vuln-config-exec:8000/sse"
+  ["vuln-runtime-only"]="http://vuln-runtime-only:8000/sse"
+  ["vuln-network"]="http://vuln-network:3000/sse"
+  ["vuln-allowlist-bypass"]="http://vuln-allowlist-bypass:3000/sse"
+  ["vuln-hidden-transport"]="http://vuln-hidden-transport:3000/sse"
+)
+
 # ── MCPScan ──────────────────────────────────────
 echo ""
 echo ">>> Running MCPScan (Stage 1: semgrep taint analysis)"
@@ -219,18 +236,23 @@ for server in "${!SERVERS[@]}"; do
 done
 
 # ── Cisco mcp-scanner ────────────────────────────
-# The Cisco mcp-scanner CLI does not accept arbitrary source paths; it operates
-# on running MCP endpoints (`remote`/`stdio`), MCP config files (`config`), or
-# pre-dumped tools/prompts/resources JSON (`static`). The path-based loop below
-# is therefore not applicable in this stage and we emit a structured placeholder
-# so downstream report generation still has a file per server.
+# Cisco mcp-scanner does not support arbitrary source paths; it operates on
+# running MCP endpoints (`remote`/`stdio`), MCP config files (`config`), or
+# pre-dumped tools/prompts/resources JSON (`static`). For this lab we use
+# remote mode against the running SSE endpoints. yara_analyzer is offline-
+# only, so this stage works without external API keys.
 echo ""
-echo ">>> Skipping Cisco mcp-scanner for source-path stage (emitting placeholders)"
+echo ">>> Running Cisco mcp-scanner (remote mode, yara analyzer)"
 for server in "${!SERVERS[@]}"; do
-  path="${SERVERS[$server]}"
-  echo "  Placeholder for $server ($path)"
-  write_result_json "$RAW_DIR/cisco-scanner/${server}.json" "cisco-scanner" "$server" "$path" "skipped" \
-    "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint" "-" "" ""
+  endpoint="${ENDPOINTS[$server]:-}"
+  if [[ -z "$endpoint" ]]; then
+    write_result_json "$RAW_DIR/cisco-scanner/${server}.json" "cisco-scanner" "$server" "-" "skipped" \
+      "no SSE endpoint mapped for $server" "-" "" ""
+    continue
+  fi
+  echo "  Scanning $server ($endpoint)..."
+  run_stdout_scanner_json "cisco-scanner" "$server" "$endpoint" "$RAW_DIR/cisco-scanner/${server}.json" "0 1" \
+    mcp-scanner --analyzers yara --format raw --log-level error remote --server-url "$endpoint"
 done
 
 # ── mcp-guard ────────────────────────────────────
@@ -241,6 +263,26 @@ for server in "${!SERVERS[@]}"; do
   echo "  Scanning $server ($path)..."
   run_stdout_scanner_json "mcp-guard" "$server" "$path" "$RAW_DIR/mcp-guard/${server}.json" "0 1" \
     mcp-guard scan --path "$path" --output json
+done
+
+# ── mcp-guard endpoint scan ──────────────────────
+# Live probe of each running MCP server. Detects runtime-only properties
+# (authless reachability, CORS wildcard, hidden admin endpoints) that source
+# scanning cannot reliably surface. Probes send POST/PUT requests with empty
+# bodies to admin paths — lab-only.
+echo ""
+echo ">>> Running mcp-guard endpoint probes (runtime/endpoint coverage)"
+for server in "${!SERVERS[@]}"; do
+  endpoint="${ENDPOINTS[$server]:-}"
+  if [[ -z "$endpoint" ]]; then
+    echo "  [SKIP] $server has no configured endpoint"
+    write_result_json "$RAW_DIR/mcp-guard-endpoint/${server}.json" "mcp-guard-endpoint" "$server" "-" "skipped" \
+      "no endpoint configured for $server" "-" "" ""
+    continue
+  fi
+  echo "  Probing $server ($endpoint)..."
+  run_stdout_scanner_json "mcp-guard-endpoint" "$server" "$endpoint" "$RAW_DIR/mcp-guard-endpoint/${server}.json" "0 1" \
+    mcp-guard scan --endpoint "$endpoint" --output json
 done
 
 # ── Normalize & Report ───────────────────────────

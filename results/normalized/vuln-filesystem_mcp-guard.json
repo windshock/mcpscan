@@ -1,7 +1,7 @@
 {
   "target": "vuln-filesystem",
   "scanner_name": "mcp-guard",
-  "timestamp": "2026-04-22T23:17:36.728542+00:00",
+  "timestamp": "2026-05-03T09:11:45.956771+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
@@ -10,19 +10,22 @@
     "env_exposure",
     "excessive_permissions"
   ],
+  "expected_false_positives": [
+    "authless_endpoint"
+  ],
   "detected_findings": [
     "unrestricted_file_read",
     "unrestricted_file_write",
-    "env_exposure"
+    "env_exposure",
+    "excessive_permissions"
   ],
   "true_positives": [
     "env_exposure",
+    "excessive_permissions",
     "unrestricted_file_read",
     "unrestricted_file_write"
   ],
-  "missed_findings": [
-    "excessive_permissions"
-  ],
+  "missed_findings": [],
   "false_positives": [],
   "policy_verdict": "BLOCK",
   "notes": [],

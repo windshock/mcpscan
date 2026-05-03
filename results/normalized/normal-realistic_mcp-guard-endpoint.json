@@ -1,0 +1,27 @@
+{
+  "target": "normal-realistic",
+  "scanner_name": "mcp-guard-endpoint",
+  "timestamp": "2026-05-03T09:11:45.959134+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [],
+  "expected_false_positives": [
+    "file_read_limited",
+    "config_access_limited",
+    "authless_endpoint",
+    "unrestricted_file_read"
+  ],
+  "detected_findings": [
+    "unrestricted_file_read",
+    "authless_endpoint"
+  ],
+  "true_positives": [],
+  "missed_findings": [],
+  "false_positives": [],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "http://normal-realistic:8000/sse",
+  "exit_code": null
+}

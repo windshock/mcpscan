@@ -89,6 +89,7 @@ PYTHONPATH=guard:. python3 -m unittest \
   guard.tests.test_discovery \
   guard.tests.test_scanner \
   guard.tests.test_cli \
+  guard.tests.test_endpoint_integration \
   runner.tests.test_reporting \
   runner.tests.test_ox_live
 

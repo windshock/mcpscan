@@ -1,11 +1,53 @@
 {
-  "scanner_name": "cisco-scanner",
-  "server_name": "normal-tricky",
-  "target": "/servers/normal-tricky",
-  "status": "skipped",
-  "timestamp": "2026-04-22T23:17:33.038168+00:00",
-  "error": null,
-  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
-  "notes": [],
-  "evidence": {}
+  "server_url": "http://normal-tricky:8000/sse",
+  "scan_results": [
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "run_script",
+      "tool_description": "Executes a predefined script by name. Only whitelisted script names are allowed.\n    Available scripts: hello, status, version.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "read_config",
+      "tool_description": "Returns a configuration value. Only whitelisted non-sensitive keys are accessible.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "list_processes",
+      "tool_description": "Lists running processes. Returns sanitized mock process information.",
+      "item_type": "tool"
+    }
+  ],
+  "requested_analyzers": [
+    "yara"
+  ]
 }

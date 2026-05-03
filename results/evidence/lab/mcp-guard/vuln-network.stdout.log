@@ -4,31 +4,42 @@
   "policy_verdict": "BLOCK",
   "environment": "production",
   "findings": [
-    "env_exposure",
-    "ssrf"
+    "ssrf",
+    "cors_misconfiguration",
+    "internal_metadata_exposure"
   ],
   "verdicts": [
-    {
-      "pattern": "env_exposure",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "process.env"
-    },
     {
       "pattern": "ssrf",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "fetch("
+      "indicator": "fetch_url"
+    },
+    {
+      "pattern": "cors_misconfiguration",
+      "severity": "MEDIUM",
+      "verdict": "CONDITIONAL",
+      "indicator": "origin: \"*\""
+    },
+    {
+      "pattern": "internal_metadata_exposure",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "internal_services"
     }
   ],
   "recommendations": [
     {
-      "pattern": "env_exposure",
-      "recommendation": "Never expose full environment. Use secret masking and allowlisted keys only."
-    },
-    {
       "pattern": "ssrf",
       "recommendation": "Implement URL allowlisting. Block private/internal IP ranges."
+    },
+    {
+      "pattern": "cors_misconfiguration",
+      "recommendation": "Restrict CORS to specific origins. Avoid wildcard in production."
+    },
+    {
+      "pattern": "internal_metadata_exposure",
+      "recommendation": "Do not return internal network/process metadata from tools. Restrict diagnostics to operators."
     }
   ]
 }

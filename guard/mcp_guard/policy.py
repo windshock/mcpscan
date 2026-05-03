@@ -72,6 +72,46 @@ DEFAULT_POLICY = {
             "verdict": "BLOCK",
             "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
         },
+        {
+            "pattern": "command_exec_via_args",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
+        },
+        {
+            "pattern": "remote_config_loading",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "BLOCK"},
+        },
+        {
+            "pattern": "internal_metadata_exposure",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
+        },
+        {
+            "pattern": "connector_metadata_exposure",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "BLOCK"},
+        },
+        {
+            "pattern": "config_injection",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "BLOCK"},
+        },
+        {
+            "pattern": "excessive_permissions",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
+        },
+        {
+            "pattern": "conditional_command_exec",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
+        },
+        {
+            "pattern": "static_analysis_bypass",
+            "verdict": "BLOCK",
+            "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
+        },
     ],
     "defaults": {
         "unknown_pattern": "CONDITIONAL",

@@ -1,13 +1,16 @@
 {
   "target": "vuln-network",
   "scanner_name": "mcpscan",
-  "timestamp": "2026-04-22T23:17:36.720255+00:00",
+  "timestamp": "2026-05-03T09:11:45.946344+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
     "ssrf",
     "cors_misconfiguration",
     "internal_metadata_exposure"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
   ],
   "detected_findings": [],
   "true_positives": [],

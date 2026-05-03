@@ -1,11 +1,53 @@
 {
-  "scanner_name": "cisco-scanner",
-  "server_name": "normal-strict",
-  "target": "/servers/normal-strict",
-  "status": "skipped",
-  "timestamp": "2026-04-22T23:17:32.950713+00:00",
-  "error": null,
-  "reason": "cisco-mcp-scanner does not support source-path scanning; use remote/stdio/config modes against a running endpoint",
-  "notes": [],
-  "evidence": {}
+  "server_url": "http://normal-strict:8000/sse",
+  "scan_results": [
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "get_time",
+      "tool_description": "Returns the current UTC time.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "calculate",
+      "tool_description": "Evaluates a simple arithmetic expression. Only numbers and basic operators (+-*/) are allowed.",
+      "item_type": "tool"
+    },
+    {
+      "status": "completed",
+      "is_safe": true,
+      "findings": {
+        "yara_analyzer": {
+          "severity": "SAFE",
+          "threat_names": [],
+          "threat_summary": "No threats detected",
+          "total_findings": 0
+        }
+      },
+      "tool_name": "echo",
+      "tool_description": "Echoes back the provided message. Maximum 200 characters.",
+      "item_type": "tool"
+    }
+  ],
+  "requested_analyzers": [
+    "yara"
+  ]
 }

@@ -1,7 +1,7 @@
 {
   "target": "vuln-filesystem",
   "scanner_name": "mcpscan",
-  "timestamp": "2026-04-22T23:17:36.719611+00:00",
+  "timestamp": "2026-05-03T09:11:45.945577+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
@@ -9,6 +9,9 @@
     "unrestricted_file_write",
     "env_exposure",
     "excessive_permissions"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint"
   ],
   "detected_findings": [],
   "true_positives": [],

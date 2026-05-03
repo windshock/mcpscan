@@ -1,0 +1,38 @@
+{
+  "target": "vuln-config-exec",
+  "scanner_name": "mcp-guard-endpoint",
+  "timestamp": "2026-05-03T09:11:45.961583+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "config_to_execution",
+    "remote_config_loading",
+    "command_exec"
+  ],
+  "expected_false_positives": [
+    "authless_endpoint",
+    "ssrf"
+  ],
+  "detected_findings": [
+    "config_to_execution",
+    "ssrf",
+    "remote_config_loading",
+    "config_to_execution",
+    "config_to_execution",
+    "authless_endpoint"
+  ],
+  "true_positives": [
+    "config_to_execution",
+    "remote_config_loading"
+  ],
+  "missed_findings": [
+    "command_exec"
+  ],
+  "false_positives": [],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "http://vuln-config-exec:8000/sse",
+  "exit_code": null
+}

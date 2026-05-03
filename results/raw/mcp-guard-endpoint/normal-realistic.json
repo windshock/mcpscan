@@ -1,0 +1,242 @@
+{
+  "target": "http://normal-realistic:8000/sse",
+  "risk": "HIGH",
+  "policy_verdict": "BLOCK",
+  "environment": "production",
+  "findings": [
+    "unrestricted_file_read",
+    "authless_endpoint"
+  ],
+  "verdicts": [
+    {
+      "pattern": "unrestricted_file_read",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "tool 'read_file' accepts path parameter"
+    },
+    {
+      "pattern": "authless_endpoint",
+      "severity": "HIGH",
+      "verdict": "BLOCK",
+      "indicator": "reachable without authentication: http://normal-realistic:8000"
+    }
+  ],
+  "recommendations": [
+    {
+      "pattern": "unrestricted_file_read",
+      "recommendation": "Restrict file access to allowlisted directories. Validate paths against traversal."
+    },
+    {
+      "pattern": "authless_endpoint",
+      "recommendation": "Add authentication (Bearer token, API key, or OAuth)."
+    }
+  ],
+  "probe_summary": {
+    "base_url": "http://normal-realistic:8000",
+    "sse_url": "http://normal-realistic:8000/sse",
+    "reachable": true,
+    "auth_required": false,
+    "mcp_detected": true,
+    "tool_count": 3,
+    "tool_names": [
+      "read_file",
+      "search_docs",
+      "get_config"
+    ],
+    "tools": [
+      {
+        "name": "read_file",
+        "description": "Reads a file from the /data directory only. Paths outside /data are rejected.",
+        "inputSchema": {
+          "properties": {
+            "path": {
+              "title": "Path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "title": "read_fileArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "read_fileOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "search_docs",
+        "description": "Searches internal documentation. Returns matching document titles.",
+        "inputSchema": {
+          "properties": {
+            "query": {
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          "required": [
+            "query"
+          ],
+          "title": "search_docsArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "search_docsOutput",
+          "type": "object"
+        }
+      },
+      {
+        "name": "get_config",
+        "description": "Returns a configuration value. Only non-sensitive keys are allowed.",
+        "inputSchema": {
+          "properties": {
+            "key": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "title": "get_configArguments",
+          "type": "object"
+        },
+        "outputSchema": {
+          "properties": {
+            "result": {
+              "title": "Result",
+              "type": "string"
+            }
+          },
+          "required": [
+            "result"
+          ],
+          "title": "get_configOutput",
+          "type": "object"
+        }
+      }
+    ],
+    "markers": [
+      "mcp_tools_listed",
+      "sse_endpoint"
+    ],
+    "checks": [
+      {
+        "url": "http://normal-realistic:8000/sse",
+        "kind": "mcp_sse",
+        "status": 200
+      },
+      {
+        "url": "http://normal-realistic:8000/health",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-realistic:8000",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-realistic:8000/messages",
+        "kind": "http",
+        "method": "GET",
+        "status": 400,
+        "content_type": null,
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "27",
+          "connection": "close"
+        },
+        "body_excerpt": "Invalid Content-Type header"
+      }
+    ],
+    "hidden_probes": [
+      {
+        "url": "http://normal-realistic:8000/api/connectors",
+        "kind": "http",
+        "method": "GET",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-realistic:8000/api/transport",
+        "kind": "http",
+        "method": "POST",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      },
+      {
+        "url": "http://normal-realistic:8000/api/config",
+        "kind": "http",
+        "method": "PUT",
+        "status": 404,
+        "content_type": "text/plain; charset=utf-8",
+        "headers": {
+          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "server": "uvicorn",
+          "content-length": "9",
+          "content-type": "text/plain; charset=utf-8",
+          "connection": "close"
+        },
+        "body_excerpt": "Not Found"
+      }
+    ],
+    "error": null
+  }
+}

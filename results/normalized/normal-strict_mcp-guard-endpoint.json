@@ -1,0 +1,23 @@
+{
+  "target": "normal-strict",
+  "scanner_name": "mcp-guard-endpoint",
+  "timestamp": "2026-05-03T09:11:45.959807+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [],
+  "expected_false_positives": [
+    "authless_endpoint"
+  ],
+  "detected_findings": [
+    "authless_endpoint"
+  ],
+  "true_positives": [],
+  "missed_findings": [],
+  "false_positives": [],
+  "policy_verdict": "BLOCK",
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": "http://normal-strict:8000/sse",
+  "exit_code": null
+}
