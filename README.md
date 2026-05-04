@@ -2,9 +2,25 @@
 
 Docker-based evaluation lab for MCP security scanners, plus a policy-based guardrail tool (`mcp-guard`).
 
-## Next Agent Handoff
+## Status
 
-This project is not complete yet. Continue from [docs/COMPLETION_PLAN.md](docs/COMPLETION_PLAN.md) before implementing changes.
+The five work items from [docs/COMPLETION_PLAN.md](docs/COMPLETION_PLAN.md) are complete. Latest live benchmark numbers below; full per-server details live in [results/report/comparison.md](results/report/comparison.md) and [results/report/ox-live.md](results/report/ox-live.md).
+
+## Benchmark Results
+
+11 lab servers, 24 expected findings. Source-only and live-endpoint stages run in the same `docker compose run --rm runner` invocation; the combined view shows what `mcp-guard` catches when both stages contribute.
+
+| Scanner | TP | FP | FN | Recall | Precision |
+|---|---:|---:|---:|---:|---:|
+| MCPScan (semgrep taint) | 0 | 4 | 24 | 0.0% | 0.0% |
+| Cisco mcp-scanner (yara analyzer, no API keys) | 1 | 1 | 23 | 4.2% | 50.0% |
+| mcp-guard (source path) | 23 | 0 | 1 | 95.8% | 100% |
+| mcp-guard-endpoint (live SSE + HTTP probe) | 15 | 0 | 9 | 62.5% | 100% |
+| **mcp-guard combined (source ∪ endpoint)** | **24** | **0** | **0** | **100%** | **100%** |
+
+The single source-only FN is `authless_endpoint` on `vuln-authless` — a runtime property no static scan can reach. The live endpoint stage closes it. `expected_false_positives` are documented per-server in [`runner/expected-findings.json`](runner/expected-findings.json) (e.g., FastMCP's unenforced auth defaults are tolerated for normal servers).
+
+The TypeScript lab servers (`vuln-network`, `vuln-allowlist-bypass`) ship an older `SSEServerTransport` that the current MCP Python client and Cisco scanner cannot list tools from. The endpoint stage falls back to HTTP probes for them; vuln-hidden-transport is fully covered that way.
 
 ## Quick Start
 
@@ -59,9 +75,12 @@ PYTHONPATH=guard:. python3 -m unittest \
   guard.tests.test_discovery \
   guard.tests.test_scanner \
   guard.tests.test_cli \
+  guard.tests.test_endpoint_integration \
   runner.tests.test_reporting \
   runner.tests.test_ox_live
 ```
+
+`test_endpoint_integration` stands up a local HTTP server and a real FastMCP server in subprocesses to exercise probe / scan / CLI paths end-to-end without docker.
 
 ## Docker Disk Recovery
 
