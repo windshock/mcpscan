@@ -80,5 +80,149 @@ class CliTests(unittest.TestCase):
         self.assertEqual(payload["findings"], ["command_exec"])
 
 
+class CliCiscoIntegrationTests(unittest.TestCase):
+    """Verify --with-cisco flag plumbing through the CLI."""
+
+    def _make_args(self, **overrides):
+        defaults = {
+            "path": "/tmp/example",
+            "config": None,
+            "endpoint": None,
+            "auto": False,
+            "policy": None,
+            "env": "production",
+            "output": "json",
+            "with_cisco": True,
+            "cisco_analyzers": None,
+            "cisco_timeout": 30,
+        }
+        defaults.update(overrides)
+        return type("Args", (), defaults)()
+
+    def _scan_result(self):
+        return {
+            "target": "/tmp/example",
+            "risk": "HIGH",
+            "findings": [
+                {
+                    "pattern_id": "command_exec",
+                    "pattern_name": "Direct Command Execution",
+                    "severity": "CRITICAL",
+                    "matched_indicator": "subprocess.run",
+                    "policy": "BLOCK",
+                    "source": "mcp-guard",
+                }
+            ],
+        }
+
+    def test_with_cisco_merges_findings_and_provenance(self):
+        scan_result = self._scan_result()
+        cisco_findings = {
+            "findings": [
+                {
+                    "pattern_id": "tool_poisoning",
+                    "pattern_name": "cisco prompt injection",
+                    "severity": "HIGH",
+                    "matched_indicator": "cisco yara: tool 'execute' → PROMPT INJECTION",
+                    "policy": "BLOCK",
+                    "source": "cisco-yara",
+                }
+            ],
+            "notes": [],
+            "ok": True,
+        }
+        args = self._make_args()
+        with patch("mcp_guard.cli.scan_path", return_value=scan_result), patch(
+            "mcp_guard.cli.PolicyEngine"
+        ) as policy_cls, patch(
+            "mcp_guard.cisco_bridge.is_available", return_value=True
+        ), patch(
+            "mcp_guard.cisco_bridge.scan_path", return_value=cisco_findings
+        ):
+            policy = policy_cls.return_value
+            policy.evaluate.return_value = {
+                "overall_verdict": "BLOCK",
+                "verdicts": [
+                    {"pattern": "command_exec", "severity": "CRITICAL", "verdict": "BLOCK", "indicator": "subprocess.run"},
+                    {"pattern": "tool_poisoning", "severity": "HIGH", "verdict": "BLOCK", "indicator": "cisco …"},
+                ],
+                "recommendations": [],
+            }
+            buffer = io.StringIO()
+            with redirect_stdout(buffer), self.assertRaises(SystemExit):
+                cli._handle_scan(args)
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(sorted(payload["findings"]), ["command_exec", "tool_poisoning"])
+        self.assertEqual(payload["provenance"]["command_exec"], ["mcp-guard"])
+        self.assertEqual(payload["provenance"]["tool_poisoning"], ["cisco-yara"])
+
+    def test_with_cisco_warns_when_binary_missing(self):
+        scan_result = self._scan_result()
+        args = self._make_args()
+        with patch("mcp_guard.cli.scan_path", return_value=scan_result), patch(
+            "mcp_guard.cli.PolicyEngine"
+        ) as policy_cls, patch("mcp_guard.cisco_bridge.is_available", return_value=False):
+            policy_cls.return_value.evaluate.return_value = {
+                "overall_verdict": "BLOCK",
+                "verdicts": [],
+                "recommendations": [],
+            }
+            buffer = io.StringIO()
+            with redirect_stdout(buffer), self.assertRaises(SystemExit):
+                cli._handle_scan(args)
+
+        payload = json.loads(buffer.getvalue())
+        self.assertTrue(any("cisco mcp-scanner not on PATH" in note for note in payload["notes"]))
+        # Mcp-guard finding still present, no cisco-tagged extras
+        self.assertEqual(payload["findings"], ["command_exec"])
+
+    def test_with_cisco_surfaces_timeout_note(self):
+        scan_result = self._scan_result()
+        args = self._make_args()
+        timeout_note = ["cisco behavioral: cisco scan timed out after 30s"]
+        with patch("mcp_guard.cli.scan_path", return_value=scan_result), patch(
+            "mcp_guard.cli.PolicyEngine"
+        ) as policy_cls, patch(
+            "mcp_guard.cisco_bridge.is_available", return_value=True
+        ), patch(
+            "mcp_guard.cisco_bridge.scan_path",
+            return_value={"findings": [], "notes": timeout_note, "ok": False},
+        ):
+            policy_cls.return_value.evaluate.return_value = {
+                "overall_verdict": "BLOCK",
+                "verdicts": [],
+                "recommendations": [],
+            }
+            buffer = io.StringIO()
+            with redirect_stdout(buffer), self.assertRaises(SystemExit):
+                cli._handle_scan(args)
+
+        payload = json.loads(buffer.getvalue())
+        self.assertIn(timeout_note[0], payload["notes"])
+
+
+class PolicyCiscoVerdictTests(unittest.TestCase):
+    def test_cisco_high_finding_forces_block_in_development(self):
+        from mcp_guard.policy import PolicyEngine
+
+        engine = PolicyEngine()
+        scan_result = {
+            "target": "x",
+            "risk": "HIGH",
+            "findings": [
+                {
+                    "pattern_id": "tool_poisoning",
+                    "severity": "HIGH",
+                    "matched_indicator": "cisco …",
+                    "source": "cisco-yara",
+                }
+            ],
+        }
+        evaluation = engine.evaluate(scan_result, environment="development")
+        self.assertEqual(evaluation["overall_verdict"], "BLOCK")
+        self.assertEqual(evaluation["verdicts"][0]["source"], "cisco-yara")
+
+
 if __name__ == "__main__":
     unittest.main()

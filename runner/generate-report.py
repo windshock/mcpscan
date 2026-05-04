@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from reporting import generate_lab_outputs, generate_ox_live_outputs
+from reporting import generate_cisco_config_outputs, generate_lab_outputs, generate_ox_live_outputs
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -14,13 +14,32 @@ LAB_EXPECTED_FILE = Path(os.environ.get("LAB_EXPECTED_FILE", str(SCRIPT_DIR / "e
 OX_EXPECTED_FILE = Path(os.environ.get("OX_EXPECTED_FILE", str(SCRIPT_DIR / "ox-live-expected.json")))
 
 
+def _resolve_ox_research_fixture() -> Path:
+    env_override = os.environ.get("OX_RESEARCH_FIXTURE", "").strip()
+    candidates = [
+        Path(env_override) if env_override else None,
+        SCRIPT_DIR / "ox_research_cases.json",
+        Path("/app/ox_research_cases.json"),
+        SCRIPT_DIR.parent / "guard" / "tests" / "fixtures" / "ox_research_cases.json",
+    ]
+    for path in candidates:
+        if path and path.is_file():
+            return path
+    return SCRIPT_DIR / "ox_research_cases.json"
+
+
 def main() -> None:
     lab_results = generate_lab_outputs(RESULTS_DIR, LAB_EXPECTED_FILE)
     ox_results = generate_ox_live_outputs(RESULTS_DIR, OX_EXPECTED_FILE)
+    cisco_config_results = generate_cisco_config_outputs(
+        RESULTS_DIR, _resolve_ox_research_fixture()
+    )
 
     print(f"Generated {len(lab_results)} lab normalized results")
     if ox_results:
         print(f"Generated {len(ox_results)} OX live normalized results")
+    if cisco_config_results:
+        print(f"Generated {len(cisco_config_results)} cisco supply-chain results")
     print(f"Reports saved to {RESULTS_DIR / 'report'}")
 
 

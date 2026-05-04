@@ -22,6 +22,40 @@ The single source-only FN is `authless_endpoint` on `vuln-authless` — a runtim
 
 The TypeScript lab servers (`vuln-network`, `vuln-allowlist-bypass`) ship an older `SSEServerTransport` that the current MCP Python client and Cisco scanner cannot list tools from. The endpoint stage falls back to HTTP probes for them; vuln-hidden-transport is fully covered that way.
 
+## Threat Models
+
+`mcp-guard` and `cisco-mcp-scanner` are complementary, not redundant — see [docs/threat-models.md](docs/threat-models.md) for the full discussion.
+
+| | **mcp-guard** | **cisco-mcp-scanner (yara)** |
+|---|---|---|
+| Looks for | Capability gaps (authless, unrestricted file/env, allowlist bypass, hidden admin, runtime-only) | Malicious-intent payloads in tool descriptions/code |
+| Use case | Audit your own MCP before deploy | Vet a third-party MCP before install |
+| Lab recall | 100 % combined | 4.2 % (capability lab is outside cisco-yara's scope) |
+
+## Integrated Usage
+
+`mcp-guard scan` has a `--with-cisco` flag that runs the cisco mcp-scanner alongside our detectors and merges findings with a `source` tag. Cisco needs to be on `PATH` (`pip install cisco-ai-mcp-scanner`) — when missing, mcp-guard prints a warning and continues alone.
+
+```bash
+# Developer pre-commit (path mode)
+mcp-guard scan --path ./servers/vuln-exec --with-cisco
+
+# Supply-chain audit (config mode, cisco's natural fit)
+mcp-guard scan --config /path/to/mcp.json --with-cisco
+
+# Live endpoint monitoring
+mcp-guard scan --endpoint http://localhost:3102/sse --with-cisco --output json
+```
+
+Cisco analyzer selection:
+
+- `yara` (default) is offline.
+- `behavioral` and `llm` need an LLM API key in `MCP_SCANNER_LLM_API_KEY` (auto-enabled when present).
+- Override explicitly: `--cisco-analyzers yara,behavioral,llm`.
+- Subprocess time cap: `--cisco-timeout 60`.
+
+Each finding in the JSON output carries a `source` field (`mcp-guard`, `cisco-yara`, `cisco-behavioral`, `cisco-llm`) plus a per-pattern `provenance` map. The PolicyEngine escalates any `HIGH`/`CRITICAL` cisco finding to `BLOCK` regardless of `--env`.
+
 ## Quick Start
 
 ```bash

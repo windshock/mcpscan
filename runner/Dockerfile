@@ -54,6 +54,7 @@ COPY runner/generate-report.py .
 COPY runner/reporting.py .
 COPY runner/expected-findings.json .
 COPY runner/ox-live-expected.json .
+COPY guard/tests/fixtures/ox_research_cases.json /app/ox_research_cases.json
 
 RUN chmod +x run-scans.sh
 

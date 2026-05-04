@@ -534,11 +534,18 @@ def _resolve_probe_urls(endpoint_url: str) -> tuple[str, str]:
 
 
 def _build_result(target: str, matches: list, source: str) -> dict:
-    """Build a scan result dict from matches."""
+    """Build a scan result dict from matches.
+
+    Each match carries an optional ``source`` field; when absent we stamp
+    ``"mcp-guard"`` so downstream consumers (PolicyEngine, CLI output) can
+    distinguish capability-based findings from cisco-emitted ones.
+    """
     deduped = []
     seen = set()
     for m in matches:
-        key = (m["pattern_id"], m["matched_indicator"])
+        if not m.get("source"):
+            m["source"] = "mcp-guard"
+        key = (m["pattern_id"], m["matched_indicator"], m.get("source"))
         if key not in seen:
             seen.add(key)
             deduped.append(m)

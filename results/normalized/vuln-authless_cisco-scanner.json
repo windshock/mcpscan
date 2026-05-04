@@ -1,7 +1,7 @@
 {
   "target": "vuln-authless",
   "scanner_name": "cisco-scanner",
-  "timestamp": "2026-05-03T09:11:45.949359+00:00",
+  "timestamp": "2026-05-04T05:20:18.998375+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [

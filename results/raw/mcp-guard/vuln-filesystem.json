@@ -9,30 +9,48 @@
     "env_exposure",
     "excessive_permissions"
   ],
+  "provenance": {
+    "unrestricted_file_read": [
+      "mcp-guard"
+    ],
+    "unrestricted_file_write": [
+      "mcp-guard"
+    ],
+    "env_exposure": [
+      "mcp-guard"
+    ],
+    "excessive_permissions": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "unrestricted_file_read",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "no path validation"
+      "indicator": "no path validation",
+      "source": "mcp-guard"
     },
     {
       "pattern": "unrestricted_file_write",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "write_file(path) without restriction"
+      "indicator": "write_file(path) without restriction",
+      "source": "mcp-guard"
     },
     {
       "pattern": "env_exposure",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "dict(os.environ)"
+      "indicator": "dict(os.environ)",
+      "source": "mcp-guard"
     },
     {
       "pattern": "excessive_permissions",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "delete+env+read+write"
+      "indicator": "delete+env+read+write",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

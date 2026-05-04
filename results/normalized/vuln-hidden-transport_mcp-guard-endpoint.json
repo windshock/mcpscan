@@ -1,7 +1,7 @@
 {
   "target": "vuln-hidden-transport",
   "scanner_name": "mcp-guard-endpoint",
-  "timestamp": "2026-05-03T09:11:45.962908+00:00",
+  "timestamp": "2026-05-04T05:20:19.005125+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
@@ -12,23 +12,18 @@
   "expected_false_positives": [
     "authless_endpoint"
   ],
-  "detected_findings": [
-    "hidden_transport",
-    "connector_metadata_exposure",
-    "hidden_transport",
-    "hidden_transport",
-    "config_injection"
-  ],
-  "true_positives": [
+  "detected_findings": [],
+  "true_positives": [],
+  "missed_findings": [
     "config_injection",
     "connector_metadata_exposure",
     "hidden_transport"
   ],
-  "missed_findings": [],
   "false_positives": [],
-  "policy_verdict": "BLOCK",
+  "policy_verdict": "ALLOW",
   "notes": [
-    "unhandled errors in a TaskGroup (1 sub-exception)"
+    "unhandled errors in a TaskGroup (1 sub-exception)",
+    "Endpoint not reachable; findings only reflect probe-level checks."
   ],
   "evidence": {},
   "source_file": null,

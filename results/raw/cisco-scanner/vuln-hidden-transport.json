@@ -3,7 +3,7 @@
   "server_name": "vuln-hidden-transport",
   "target": "http://vuln-hidden-transport:3000/sse",
   "status": "failed",
-  "timestamp": "2026-05-03T09:02:22.889218+00:00",
+  "timestamp": "2026-05-04T05:12:32.779998+00:00",
   "error": "cisco-scanner produced invalid JSON output",
   "reason": null,
   "notes": [

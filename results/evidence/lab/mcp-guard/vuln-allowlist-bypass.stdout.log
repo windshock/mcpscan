@@ -8,24 +8,35 @@
     "allowlist_bypass",
     "command_exec_via_args"
   ],
+  "provenance": {
+    "allowlist_bypass": [
+      "mcp-guard"
+    ],
+    "command_exec_via_args": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "allowlist_bypass",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "ALLOWED_COMMANDS"
+      "indicator": "ALLOWED_COMMANDS",
+      "source": "mcp-guard"
     },
     {
       "pattern": "allowlist_bypass",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "git -c"
+      "indicator": "git -c",
+      "source": "mcp-guard"
     },
     {
       "pattern": "command_exec_via_args",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "ALLOWED_COMMANDS + unvalidated args"
+      "indicator": "ALLOWED_COMMANDS + unvalidated args",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

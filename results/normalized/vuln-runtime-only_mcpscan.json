@@ -1,7 +1,7 @@
 {
   "target": "vuln-runtime-only",
   "scanner_name": "mcpscan",
-  "timestamp": "2026-05-03T09:11:45.946669+00:00",
+  "timestamp": "2026-05-04T05:20:18.997354+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [

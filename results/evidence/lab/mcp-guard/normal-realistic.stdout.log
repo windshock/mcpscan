@@ -4,6 +4,7 @@
   "policy_verdict": "ALLOW",
   "environment": "production",
   "findings": [],
+  "provenance": {},
   "verdicts": [],
   "recommendations": []
 }

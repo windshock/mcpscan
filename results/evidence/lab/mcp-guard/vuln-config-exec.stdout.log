@@ -8,24 +8,38 @@
     "remote_config_loading",
     "command_exec"
   ],
+  "provenance": {
+    "config_to_execution": [
+      "mcp-guard"
+    ],
+    "remote_config_loading": [
+      "mcp-guard"
+    ],
+    "command_exec": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "config_to_execution",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "apply_config"
+      "indicator": "apply_config",
+      "source": "mcp-guard"
     },
     {
       "pattern": "remote_config_loading",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "load_mcp_config"
+      "indicator": "load_mcp_config",
+      "source": "mcp-guard"
     },
     {
       "pattern": "command_exec",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "subprocess.run"
+      "indicator": "subprocess.run",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

@@ -1,7 +1,7 @@
 {
   "target": "vuln-network",
   "scanner_name": "cisco-scanner",
-  "timestamp": "2026-05-03T09:11:45.951382+00:00",
+  "timestamp": "2026-05-04T05:20:18.999927+00:00",
   "status": "failed",
   "error": "cisco-scanner produced invalid JSON output",
   "expected_findings": [

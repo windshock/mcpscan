@@ -1,86 +1,26 @@
 {
   "target": "http://vuln-hidden-transport:3000/sse",
-  "risk": "HIGH",
-  "policy_verdict": "BLOCK",
+  "risk": "NONE",
+  "policy_verdict": "ALLOW",
   "environment": "production",
-  "findings": [
-    "hidden_transport",
-    "connector_metadata_exposure",
-    "hidden_transport",
-    "hidden_transport",
-    "config_injection"
-  ],
-  "verdicts": [
-    {
-      "pattern": "hidden_transport",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "hidden admin endpoint reachable: /api/connectors"
-    },
-    {
-      "pattern": "connector_metadata_exposure",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "GET /api/connectors returned connector configuration"
-    },
-    {
-      "pattern": "hidden_transport",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "hidden admin endpoint reachable: /api/transport"
-    },
-    {
-      "pattern": "hidden_transport",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "hidden admin endpoint reachable: /api/config"
-    },
-    {
-      "pattern": "config_injection",
-      "severity": "HIGH",
-      "verdict": "BLOCK",
-      "indicator": "PUT /api/config accepts arbitrary configuration body"
-    }
-  ],
-  "recommendations": [
-    {
-      "pattern": "hidden_transport",
-      "recommendation": "Remove hidden admin endpoints or protect with strong authentication."
-    },
-    {
-      "pattern": "connector_metadata_exposure",
-      "recommendation": "Do not expose connector configuration over HTTP. Keep credentials in protected secrets."
-    },
-    {
-      "pattern": "hidden_transport",
-      "recommendation": "Remove hidden admin endpoints or protect with strong authentication."
-    },
-    {
-      "pattern": "hidden_transport",
-      "recommendation": "Remove hidden admin endpoints or protect with strong authentication."
-    },
-    {
-      "pattern": "config_injection",
-      "recommendation": "Remove ad-hoc config-apply endpoints or gate them behind strong auth and validation."
-    }
-  ],
+  "findings": [],
+  "provenance": {},
+  "verdicts": [],
+  "recommendations": [],
   "notes": [
-    "unhandled errors in a TaskGroup (1 sub-exception)"
+    "unhandled errors in a TaskGroup (1 sub-exception)",
+    "Endpoint not reachable; findings only reflect probe-level checks."
   ],
   "probe_summary": {
     "base_url": "http://vuln-hidden-transport:3000",
     "sse_url": "http://vuln-hidden-transport:3000/sse",
-    "reachable": true,
+    "reachable": false,
     "auth_required": null,
     "mcp_detected": false,
     "tool_count": 0,
     "tool_names": [],
     "tools": [],
-    "markers": [
-      "hidden:/api/config",
-      "hidden:/api/connectors",
-      "hidden:/api/transport"
-    ],
+    "markers": [],
     "checks": [
       {
         "url": "http://vuln-hidden-transport:3000/sse",
@@ -92,51 +32,31 @@
         "url": "http://vuln-hidden-transport:3000/health",
         "kind": "http",
         "method": "GET",
-        "status": 200,
-        "content_type": "application/json; charset=utf-8",
-        "headers": {
-          "x-powered-by": "Express",
-          "content-type": "application/json; charset=utf-8",
-          "content-length": "48",
-          "etag": "W/\"30-ACHVp0J9QQb/Ptu9APn/pzP4uBM\"",
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
-          "connection": "close"
-        },
-        "body_excerpt": "{\"status\":\"ok\",\"server\":\"vuln-hidden-transport\"}"
+        "status": null,
+        "content_type": null,
+        "headers": {},
+        "body_excerpt": "",
+        "error": "<urlopen error [Errno 111] Connection refused>"
       },
       {
         "url": "http://vuln-hidden-transport:3000",
         "kind": "http",
         "method": "GET",
-        "status": 404,
-        "content_type": "text/html; charset=utf-8",
-        "headers": {
-          "x-powered-by": "Express",
-          "content-security-policy": "default-src 'none'",
-          "x-content-type-options": "nosniff",
-          "content-type": "text/html; charset=utf-8",
-          "content-length": "139",
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
-          "connection": "close"
-        },
-        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+        "status": null,
+        "content_type": null,
+        "headers": {},
+        "body_excerpt": "",
+        "error": "<urlopen error [Errno 111] Connection refused>"
       },
       {
         "url": "http://vuln-hidden-transport:3000/messages",
         "kind": "http",
         "method": "GET",
-        "status": 404,
-        "content_type": "text/html; charset=utf-8",
-        "headers": {
-          "x-powered-by": "Express",
-          "content-security-policy": "default-src 'none'",
-          "x-content-type-options": "nosniff",
-          "content-type": "text/html; charset=utf-8",
-          "content-length": "147",
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
-          "connection": "close"
-        },
-        "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /messages</pre>\n</body>\n</html>\n"
+        "status": null,
+        "content_type": null,
+        "headers": {},
+        "body_excerpt": "",
+        "error": "<urlopen error [Errno 111] Connection refused>"
       }
     ],
     "hidden_probes": [
@@ -144,49 +64,31 @@
         "url": "http://vuln-hidden-transport:3000/api/connectors",
         "kind": "http",
         "method": "GET",
-        "status": 200,
-        "content_type": "application/json; charset=utf-8",
-        "headers": {
-          "x-powered-by": "Express",
-          "content-type": "application/json; charset=utf-8",
-          "content-length": "261",
-          "etag": "W/\"105-Tt4ewmQ2svL8pDD1D8Y0mY7H3bc\"",
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
-          "connection": "close"
-        },
-        "body_excerpt": "{\"connectors\":[{\"name\":\"internal-db\",\"type\":\"stdio\",\"command\":\"postgres-proxy\",\"args\":[\"--host\",\"db.internal\",\"--port\",\"5432\"],\"env\":{\"PGPASSWORD\":\"internal-db-password-123\"}},{\"name\":\"file-server\",\"type\":\"stdio\",\"command\":\"file-access\",\"args\":[\"--root\",\"/\"]}]}"
+        "status": null,
+        "content_type": null,
+        "headers": {},
+        "body_excerpt": "",
+        "error": "<urlopen error [Errno 111] Connection refused>"
       },
       {
         "url": "http://vuln-hidden-transport:3000/api/transport",
         "kind": "http",
         "method": "POST",
-        "status": 400,
-        "content_type": "application/json; charset=utf-8",
-        "headers": {
-          "x-powered-by": "Express",
-          "content-type": "application/json; charset=utf-8",
-          "content-length": "43",
-          "etag": "W/\"2b-rNNhabcNXPrNUO3pDm1SyxfZXOQ\"",
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
-          "connection": "close"
-        },
-        "body_excerpt": "{\"error\":\"Invalid transport configuration\"}"
+        "status": null,
+        "content_type": null,
+        "headers": {},
+        "body_excerpt": "",
+        "error": "<urlopen error [Errno 111] Connection refused>"
       },
       {
         "url": "http://vuln-hidden-transport:3000/api/config",
         "kind": "http",
         "method": "PUT",
-        "status": 200,
-        "content_type": "application/json; charset=utf-8",
-        "headers": {
-          "x-powered-by": "Express",
-          "content-type": "application/json; charset=utf-8",
-          "content-length": "89",
-          "etag": "W/\"59-Mzd2zrRKm3DBXzocH28xA2abbGQ\"",
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
-          "connection": "close"
-        },
-        "body_excerpt": "{\"status\":\"applied\",\"config\":{},\"message\":\"Configuration has been applied to the server\"}"
+        "status": null,
+        "content_type": null,
+        "headers": {},
+        "body_excerpt": "",
+        "error": "<urlopen error [Errno 111] Connection refused>"
       }
     ],
     "error": "unhandled errors in a TaskGroup (1 sub-exception)"

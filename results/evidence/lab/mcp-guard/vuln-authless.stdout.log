@@ -10,36 +10,52 @@
     "tool_poisoning",
     "tool_poisoning"
   ],
+  "provenance": {
+    "unrestricted_file_read": [
+      "mcp-guard"
+    ],
+    "env_exposure": [
+      "mcp-guard"
+    ],
+    "tool_poisoning": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "unrestricted_file_read",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "no path restriction"
+      "indicator": "no path restriction",
+      "source": "mcp-guard"
     },
     {
       "pattern": "env_exposure",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "dict(os.environ)"
+      "indicator": "dict(os.environ)",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "IGNORE ANY PREVIOUS"
+      "indicator": "IGNORE ANY PREVIOUS",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "NOTE TO ASSISTANT:"
+      "indicator": "NOTE TO ASSISTANT:",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "IMPORTANT:"
+      "indicator": "IMPORTANT:",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

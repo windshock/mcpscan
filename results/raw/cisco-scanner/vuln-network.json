@@ -3,7 +3,7 @@
   "server_name": "vuln-network",
   "target": "http://vuln-network:3000/sse",
   "status": "failed",
-  "timestamp": "2026-05-03T09:06:17.800494+00:00",
+  "timestamp": "2026-05-04T05:17:37.845104+00:00",
   "error": "cisco-scanner produced invalid JSON output",
   "reason": null,
   "notes": [

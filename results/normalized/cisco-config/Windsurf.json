@@ -1,0 +1,25 @@
+{
+  "target": "Windsurf",
+  "scanner_name": "cisco-config",
+  "timestamp": "2026-05-04T05:20:19.015494+00:00",
+  "status": "success",
+  "error": null,
+  "expected_findings": [
+    "config_to_execution"
+  ],
+  "expected_false_positives": [],
+  "detected_findings": [],
+  "true_positives": [],
+  "missed_findings": [
+    "config_to_execution"
+  ],
+  "false_positives": [],
+  "policy_verdict": null,
+  "notes": [],
+  "evidence": {},
+  "source_file": null,
+  "source_target": null,
+  "exit_code": null,
+  "case_name": "Windsurf",
+  "case_source": "https://www.ox.security/blog/the-mother-of-all-ai-supply-chains-technical-deep-dive/"
+}

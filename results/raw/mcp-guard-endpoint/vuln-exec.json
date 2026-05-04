@@ -10,36 +10,52 @@
     "tool_poisoning",
     "authless_endpoint"
   ],
+  "provenance": {
+    "command_exec": [
+      "mcp-guard"
+    ],
+    "tool_poisoning": [
+      "mcp-guard"
+    ],
+    "authless_endpoint": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "command_exec",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "tool name suggests command execution: execute_command"
+      "indicator": "tool name suggests command execution: execute_command",
+      "source": "mcp-guard"
     },
     {
       "pattern": "command_exec",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "tool 'execute_command' accepts cmd/command parameter"
+      "indicator": "tool 'execute_command' accepts cmd/command parameter",
+      "source": "mcp-guard"
     },
     {
       "pattern": "command_exec",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "tool name suggests command execution: run_with_args"
+      "indicator": "tool name suggests command execution: run_with_args",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "IMPORTANT:"
+      "indicator": "IMPORTANT:",
+      "source": "mcp-guard"
     },
     {
       "pattern": "authless_endpoint",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "reachable without authentication: http://vuln-exec:8000"
+      "indicator": "reachable without authentication: http://vuln-exec:8000",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [
@@ -190,7 +206,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
+          "date": "Mon, 04 May 2026 05:12:32 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -205,7 +221,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
+          "date": "Mon, 04 May 2026 05:12:32 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -220,7 +236,7 @@
         "status": 400,
         "content_type": null,
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
+          "date": "Mon, 04 May 2026 05:12:32 GMT",
           "server": "uvicorn",
           "content-length": "27",
           "connection": "close"
@@ -236,7 +252,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
+          "date": "Mon, 04 May 2026 05:12:32 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -251,7 +267,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
+          "date": "Mon, 04 May 2026 05:12:32 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -266,7 +282,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:37 GMT",
+          "date": "Mon, 04 May 2026 05:12:32 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",

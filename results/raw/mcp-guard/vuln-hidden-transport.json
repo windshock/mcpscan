@@ -8,24 +8,38 @@
     "connector_metadata_exposure",
     "config_injection"
   ],
+  "provenance": {
+    "hidden_transport": [
+      "mcp-guard"
+    ],
+    "connector_metadata_exposure": [
+      "mcp-guard"
+    ],
+    "config_injection": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "hidden_transport",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "/api/transport"
+      "indicator": "/api/transport",
+      "source": "mcp-guard"
     },
     {
       "pattern": "connector_metadata_exposure",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "/api/connectors with stdio command + credentials"
+      "indicator": "/api/connectors with stdio command + credentials",
+      "source": "mcp-guard"
     },
     {
       "pattern": "config_injection",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "/api/config accepts arbitrary body"
+      "indicator": "/api/config accepts arbitrary body",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

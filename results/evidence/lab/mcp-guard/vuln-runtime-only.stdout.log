@@ -10,36 +10,52 @@
     "conditional_command_exec",
     "runtime_only_danger"
   ],
+  "provenance": {
+    "static_analysis_bypass": [
+      "mcp-guard"
+    ],
+    "conditional_command_exec": [
+      "mcp-guard"
+    ],
+    "runtime_only_danger": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "static_analysis_bypass",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "SECRET_TRIGGER_FORMAT"
+      "indicator": "SECRET_TRIGGER_FORMAT",
+      "source": "mcp-guard"
     },
     {
       "pattern": "conditional_command_exec",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "if component =="
+      "indicator": "if component ==",
+      "source": "mcp-guard"
     },
     {
       "pattern": "conditional_command_exec",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "filter.startswith(\"exec:\")"
+      "indicator": "filter.startswith(\"exec:\")",
+      "source": "mcp-guard"
     },
     {
       "pattern": "conditional_command_exec",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "request_headers.get"
+      "indicator": "request_headers.get",
+      "source": "mcp-guard"
     },
     {
       "pattern": "runtime_only_danger",
       "severity": "HIGH",
       "verdict": "CONDITIONAL",
-      "indicator": "runtime-triggered subprocess gated by hardcoded value"
+      "indicator": "runtime-triggered subprocess gated by hardcoded value",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

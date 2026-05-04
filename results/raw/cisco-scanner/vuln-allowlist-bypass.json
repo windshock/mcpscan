@@ -3,7 +3,7 @@
   "server_name": "vuln-allowlist-bypass",
   "target": "http://vuln-allowlist-bypass:3000/sse",
   "status": "failed",
-  "timestamp": "2026-05-03T09:11:25.611189+00:00",
+  "timestamp": "2026-05-04T05:12:24.780546+00:00",
   "error": "cisco-scanner produced invalid JSON output",
   "reason": null,
   "notes": [

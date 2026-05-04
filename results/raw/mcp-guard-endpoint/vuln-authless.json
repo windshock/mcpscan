@@ -12,48 +12,69 @@
     "tool_poisoning",
     "authless_endpoint"
   ],
+  "provenance": {
+    "env_exposure": [
+      "mcp-guard"
+    ],
+    "unrestricted_file_read": [
+      "mcp-guard"
+    ],
+    "tool_poisoning": [
+      "mcp-guard"
+    ],
+    "authless_endpoint": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "env_exposure",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "tool 'list_environment' exposes environment variables"
+      "indicator": "tool 'list_environment' exposes environment variables",
+      "source": "mcp-guard"
     },
     {
       "pattern": "unrestricted_file_read",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "tool 'read_file_unrestricted' accepts path parameter"
+      "indicator": "tool 'read_file_unrestricted' accepts path parameter",
+      "source": "mcp-guard"
     },
     {
       "pattern": "unrestricted_file_read",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "tool 'list_directory' accepts path parameter"
+      "indicator": "tool 'list_directory' accepts path parameter",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "IGNORE ANY PREVIOUS"
+      "indicator": "IGNORE ANY PREVIOUS",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "NOTE TO ASSISTANT:"
+      "indicator": "NOTE TO ASSISTANT:",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "IMPORTANT:"
+      "indicator": "IMPORTANT:",
+      "source": "mcp-guard"
     },
     {
       "pattern": "authless_endpoint",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "reachable without authentication: http://vuln-authless:8000"
+      "indicator": "reachable without authentication: http://vuln-authless:8000",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [
@@ -220,7 +241,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "date": "Mon, 04 May 2026 05:12:30 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -235,7 +256,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "date": "Mon, 04 May 2026 05:12:30 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -250,7 +271,7 @@
         "status": 400,
         "content_type": null,
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "date": "Mon, 04 May 2026 05:12:30 GMT",
           "server": "uvicorn",
           "content-length": "27",
           "connection": "close"
@@ -266,7 +287,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "date": "Mon, 04 May 2026 05:12:30 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -281,7 +302,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "date": "Mon, 04 May 2026 05:12:30 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -296,7 +317,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:32 GMT",
+          "date": "Mon, 04 May 2026 05:12:30 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",

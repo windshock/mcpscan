@@ -30,10 +30,22 @@ import pathlib
 import sys
 
 path = pathlib.Path(sys.argv[1])
-text = path.read_text()
-if not text.strip():
+text = path.read_text().strip()
+if not text:
     raise SystemExit(1)
-json.loads(text)
+try:
+    json.loads(text)
+except json.JSONDecodeError:
+    # Some scanners (cisco mcp-scanner on certain cases) print a banner line
+    # or trailing diagnostic after the JSON payload. Try to recover the
+    # outermost JSON object so downstream normalization still runs.
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end <= start:
+        raise SystemExit(1)
+    snippet = text[start : end + 1]
+    json.loads(snippet)
+    path.write_text(snippet)
 PY
 }
 
@@ -187,7 +199,7 @@ require_command python3
 require_command mcpscan
 require_command mcp-guard
 
-mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
+mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
 
 echo "=========================================="
 echo " MCP Security Lab — Scanner Runner"
@@ -284,6 +296,42 @@ for server in "${!SERVERS[@]}"; do
   run_stdout_scanner_json "mcp-guard-endpoint" "$server" "$endpoint" "$RAW_DIR/mcp-guard-endpoint/${server}.json" "0 1" \
     mcp-guard scan --endpoint "$endpoint" --output json
 done
+
+# ── Cisco config-mode (supply-chain corpus) ──────
+# Cisco's `config` subcommand is its natural threat-model fit (malicious MCP
+# configs that auto-launch dangerous commands). Run it against the OX
+# research fixture so the comparison report has an honest measurement of
+# cisco's supply-chain coverage, not just the lab's capability servers.
+OX_FIXTURE="/app/ox_research_cases.json"
+if [[ ! -f "$OX_FIXTURE" ]]; then
+  OX_FIXTURE="/servers/../guard/tests/fixtures/ox_research_cases.json"
+fi
+
+if [[ -f "$OX_FIXTURE" ]]; then
+  echo ""
+  echo ">>> Running Cisco mcp-scanner (config mode against OX research corpus)"
+  ox_tmp="$(mktemp -d)"
+  python3 - "$OX_FIXTURE" "$ox_tmp" <<'PY'
+import json, sys, pathlib
+fixture, outdir = sys.argv[1], pathlib.Path(sys.argv[2])
+cases = json.loads(pathlib.Path(fixture).read_text())
+for case in cases:
+    name = case["name"].replace(" ", "_").replace("/", "_")
+    (outdir / f"{name}.json").write_text(json.dumps(case["payload"], indent=2))
+PY
+  for case_file in "$ox_tmp"/*.json; do
+    case_name="$(basename "$case_file" .json)"
+    echo "  Scanning $case_name..."
+    run_stdout_scanner_json "cisco-config" "$case_name" "$case_file" \
+      "$RAW_DIR/cisco-config/${case_name}.json" "0 1" \
+      mcp-scanner --analyzers yara --format raw --log-level error \
+        config --config-path "$case_file"
+  done
+  rm -rf "$ox_tmp"
+else
+  echo ""
+  echo ">>> Skipping Cisco config-mode stage (OX fixture not found)"
+fi
 
 # ── Normalize & Report ───────────────────────────
 echo ""

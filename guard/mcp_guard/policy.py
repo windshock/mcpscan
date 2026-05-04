@@ -140,21 +140,38 @@ class PolicyEngine:
         for finding in findings:
             pattern_id = finding.get("pattern_id", "")
             rule = self.rules.get(pattern_id)
+            source = finding.get("source") or "mcp-guard"
+            severity = finding.get("severity", "UNKNOWN")
+
+            # Cisco findings flag confirmed-malicious authoring (not a
+            # capability that depends on environment), so HIGH/CRITICAL
+            # cisco-* findings escalate to BLOCK regardless of policy rules.
+            if source.startswith("cisco-") and str(severity).upper() in ("HIGH", "CRITICAL"):
+                verdicts.append({
+                    "pattern": pattern_id,
+                    "severity": severity,
+                    "verdict": "BLOCK",
+                    "indicator": finding.get("matched_indicator", ""),
+                    "source": source,
+                })
+                continue
 
             if rule:
                 env_verdict = rule.get("environments", {}).get(environment, rule.get("verdict", "CONDITIONAL"))
                 verdicts.append({
                     "pattern": pattern_id,
-                    "severity": finding.get("severity", "UNKNOWN"),
+                    "severity": severity,
                     "verdict": env_verdict,
                     "indicator": finding.get("matched_indicator", ""),
+                    "source": source,
                 })
             else:
                 verdicts.append({
                     "pattern": pattern_id,
-                    "severity": finding.get("severity", "UNKNOWN"),
+                    "severity": severity,
                     "verdict": self.defaults.get("unknown_pattern", "CONDITIONAL"),
                     "indicator": finding.get("matched_indicator", ""),
+                    "source": source,
                 })
 
         # Overall verdict: most restrictive wins
@@ -192,7 +209,13 @@ class PolicyEngine:
         return highest
 
     def format_output(self, evaluation: dict) -> str:
-        """Format evaluation as human-readable output."""
+        """Format evaluation as human-readable output, grouped by source.
+
+        mcp-guard findings show capability-based vulnerabilities.
+        cisco-* findings show malicious-intent / supply-chain payload patterns.
+        Each section is omitted when empty so the existing single-tool output
+        stays unchanged.
+        """
         lines = []
         lines.append(f"Target: {evaluation['target']}")
         lines.append(f"Risk: {evaluation['risk']}")
@@ -200,16 +223,34 @@ class PolicyEngine:
         lines.append("")
 
         if evaluation["verdicts"]:
-            lines.append("Findings:")
+            sections: list[tuple[str, list[dict]]] = [
+                ("Vulnerabilities (mcp-guard)", []),
+                ("Malicious patterns (cisco)", []),
+            ]
             for v in evaluation["verdicts"]:
-                icon = {"BLOCK": "🚫", "CONDITIONAL": "⚠️", "ALLOW": "✅"}.get(v["verdict"], "?")
-                lines.append(f"  {icon} [{v['severity']}] {v['pattern']}: {v['verdict']}")
-                lines.append(f"     Indicator: {v['indicator']}")
+                source = v.get("source") or "mcp-guard"
+                bucket = 1 if source.startswith("cisco-") else 0
+                sections[bucket][1].append(v)
+
+            for title, group in sections:
+                if not group:
+                    continue
+                lines.append(f"{title}:")
+                for v in group:
+                    icon = {"BLOCK": "🚫", "CONDITIONAL": "⚠️", "ALLOW": "✅"}.get(v["verdict"], "?")
+                    suffix = f" via {v['source']}" if v.get("source") and v["source"] != "mcp-guard" else ""
+                    lines.append(f"  {icon} [{v['severity']}] {v['pattern']}: {v['verdict']}{suffix}")
+                    lines.append(f"     Indicator: {v['indicator']}")
+                lines.append("")
 
         if evaluation["recommendations"]:
-            lines.append("")
             lines.append("Recommendations:")
+            seen = set()
             for r in evaluation["recommendations"]:
+                key = (r["pattern"], r["recommendation"])
+                if key in seen:
+                    continue
+                seen.add(key)
                 lines.append(f"  → {r['pattern']}: {r['recommendation']}")
 
-        return "\n".join(lines)
+        return "\n".join(lines).rstrip()

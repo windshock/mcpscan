@@ -1,6 +1,6 @@
 # MCP Scanner Benchmark Report
 
-Generated: 2026-05-03T09:11:45.964170+00:00
+Generated: 2026-05-04T05:20:19.005718+00:00
 
 
 ## mcpscan
@@ -77,14 +77,14 @@ Generated: 2026-05-03T09:11:45.964170+00:00
 
 ## mcp-guard-endpoint
 
-- **True Positives**: 16
+- **True Positives**: 13
 - **False Positives**: 0
-- **False Negatives (Missed)**: 8
+- **False Negatives (Missed)**: 11
 - **Total Expected Findings**: 24
 - **Successful Scans**: 11
 - **Skipped Scans**: 0
 - **Failed Scans**: 0
-- **Recall**: 66.7%
+- **Recall**: 54.2%
 - **Precision**: 100.0%
 
   OK **normal-realistic**: TP=0 FP=0 FN=0
@@ -95,7 +95,7 @@ Generated: 2026-05-03T09:11:45.964170+00:00
   WARN **vuln-config-exec**: TP=2 FP=0 FN=1
   OK **vuln-exec**: TP=2 FP=0 FN=0
   OK **vuln-filesystem**: TP=4 FP=0 FN=0
-  OK **vuln-hidden-transport**: TP=3 FP=0 FN=0
+  WARN **vuln-hidden-transport**: TP=0 FP=0 FN=3
   WARN **vuln-network**: TP=1 FP=0 FN=2
   WARN **vuln-runtime-only**: TP=0 FP=0 FN=3
 
@@ -111,7 +111,7 @@ Generated: 2026-05-03T09:11:45.964170+00:00
 | vuln-config-exec | WARN TP:0 FP:1 FN:3 | WARN TP:0 FP:0 FN:3 | OK TP:3 FP:0 FN:0 | WARN TP:2 FP:0 FN:1 |
 | vuln-exec | WARN TP:0 FP:1 FN:2 | WARN TP:0 FP:0 FN:2 | OK TP:2 FP:0 FN:0 | OK TP:2 FP:0 FN:0 |
 | vuln-filesystem | WARN TP:0 FP:0 FN:4 | WARN TP:0 FP:1 FN:4 | OK TP:4 FP:0 FN:0 | OK TP:4 FP:0 FN:0 |
-| vuln-hidden-transport | WARN TP:0 FP:0 FN:3 | FAIL TP:0 FP:0 FN:3 | OK TP:3 FP:0 FN:0 | OK TP:3 FP:0 FN:0 |
+| vuln-hidden-transport | WARN TP:0 FP:0 FN:3 | FAIL TP:0 FP:0 FN:3 | OK TP:3 FP:0 FN:0 | WARN TP:0 FP:0 FN:3 |
 | vuln-network | WARN TP:0 FP:0 FN:3 | FAIL TP:0 FP:0 FN:3 | OK TP:3 FP:0 FN:0 | WARN TP:1 FP:0 FN:2 |
 | vuln-runtime-only | WARN TP:0 FP:1 FN:3 | WARN TP:0 FP:0 FN:3 | OK TP:3 FP:0 FN:0 | WARN TP:0 FP:0 FN:3 |
 

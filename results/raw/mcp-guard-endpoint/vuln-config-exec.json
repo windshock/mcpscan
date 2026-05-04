@@ -11,42 +11,62 @@
     "config_to_execution",
     "authless_endpoint"
   ],
+  "provenance": {
+    "config_to_execution": [
+      "mcp-guard"
+    ],
+    "ssrf": [
+      "mcp-guard"
+    ],
+    "remote_config_loading": [
+      "mcp-guard"
+    ],
+    "authless_endpoint": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "config_to_execution",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "tool 'apply_config' applies a configuration that can drive execution"
+      "indicator": "tool 'apply_config' applies a configuration that can drive execution",
+      "source": "mcp-guard"
     },
     {
       "pattern": "ssrf",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "tool 'load_mcp_config' accepts url parameter"
+      "indicator": "tool 'load_mcp_config' accepts url parameter",
+      "source": "mcp-guard"
     },
     {
       "pattern": "remote_config_loading",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "tool 'load_mcp_config' loads configuration from a remote URL"
+      "indicator": "tool 'load_mcp_config' loads configuration from a remote URL",
+      "source": "mcp-guard"
     },
     {
       "pattern": "config_to_execution",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "tool 'load_mcp_config' applies a configuration that can drive execution"
+      "indicator": "tool 'load_mcp_config' applies a configuration that can drive execution",
+      "source": "mcp-guard"
     },
     {
       "pattern": "config_to_execution",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "tool 'update_settings' applies a configuration that can drive execution"
+      "indicator": "tool 'update_settings' applies a configuration that can drive execution",
+      "source": "mcp-guard"
     },
     {
       "pattern": "authless_endpoint",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "reachable without authentication: http://vuln-config-exec:8000"
+      "indicator": "reachable without authentication: http://vuln-config-exec:8000",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [
@@ -201,7 +221,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "date": "Mon, 04 May 2026 05:12:40 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -216,7 +236,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "date": "Mon, 04 May 2026 05:12:40 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -231,7 +251,7 @@
         "status": 400,
         "content_type": null,
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "date": "Mon, 04 May 2026 05:12:40 GMT",
           "server": "uvicorn",
           "content-length": "27",
           "connection": "close"
@@ -247,7 +267,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "date": "Mon, 04 May 2026 05:12:40 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -262,7 +282,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "date": "Mon, 04 May 2026 05:12:40 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -277,7 +297,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:44 GMT",
+          "date": "Mon, 04 May 2026 05:12:40 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",

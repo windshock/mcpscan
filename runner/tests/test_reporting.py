@@ -360,6 +360,80 @@ class ReportingTest(unittest.TestCase):
             self.assertEqual(mcpscan_result["status"], "success")
             self.assertEqual(mcpscan_result["true_positives"], ["command_exec"])
 
+    def test_generate_cisco_config_outputs_against_ox_corpus(self):
+        from runner.reporting import generate_cisco_config_outputs
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            results_dir = Path(tmpdir) / "results"
+            raw_dir = results_dir / "raw" / "cisco-config"
+            raw_dir.mkdir(parents=True)
+
+            (raw_dir / "Flowise.json").write_text(
+                json.dumps(
+                    {
+                        "scan_results": [
+                            {
+                                "tool_name": "flowise_attack",
+                                "is_safe": False,
+                                "findings": {
+                                    "yara_analyzer": {
+                                        "severity": "HIGH",
+                                        "threat_names": ["CODE EXECUTION"],
+                                    }
+                                },
+                            }
+                        ]
+                    }
+                )
+            )
+            (raw_dir / "Upsonic.json").write_text(
+                json.dumps({"scan_results": []})
+            )
+
+            fixture = Path(tmpdir) / "ox_research_cases.json"
+            fixture.write_text(
+                json.dumps(
+                    [
+                        {
+                            "name": "Flowise",
+                            "expected_findings": ["config_to_execution", "allowlist_bypass"],
+                            "payload": {},
+                        },
+                        {
+                            "name": "Upsonic",
+                            "expected_findings": ["config_to_execution"],
+                            "payload": {},
+                        },
+                    ]
+                )
+            )
+
+            results = generate_cisco_config_outputs(results_dir, fixture)
+            by_name = {r["target"]: r for r in results}
+            self.assertEqual(by_name["Flowise"]["true_positives"], [])  # CODE EXECUTION → command_exec, not in expected
+            self.assertEqual(by_name["Flowise"]["false_positives"], ["command_exec"])
+            self.assertIn("config_to_execution", by_name["Flowise"]["missed_findings"])
+            self.assertEqual(by_name["Upsonic"]["true_positives"], [])
+            self.assertIn("config_to_execution", by_name["Upsonic"]["missed_findings"])
+
+            report = (results_dir / "report" / "cisco-supply-chain.md").read_text()
+            self.assertIn("Cisco Supply-Chain Coverage", report)
+            self.assertIn("Flowise", report)
+            self.assertIn("Upsonic", report)
+
+    def test_generate_cisco_config_outputs_silently_skips_when_empty(self):
+        from runner.reporting import generate_cisco_config_outputs
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            results_dir = Path(tmpdir) / "results"
+            (results_dir / "raw" / "cisco-config").mkdir(parents=True)
+            fixture = Path(tmpdir) / "fix.json"
+            fixture.write_text("[]")
+
+            results = generate_cisco_config_outputs(results_dir, fixture)
+            self.assertEqual(results, [])
+            self.assertFalse((results_dir / "report" / "cisco-supply-chain.md").exists())
+
     def test_generate_ox_live_outputs_marks_missing_raw_results(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             results_dir = Path(tmpdir) / "results"

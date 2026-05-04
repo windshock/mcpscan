@@ -165,29 +165,31 @@ def normalize_mcpscan(raw: Any, server_name: str, expected: dict) -> dict[str, A
     return normalize_lab_result("mcpscan", raw, server_name, expected, findings)
 
 
-CISCO_THREAT_MAP = {
-    "PROMPT INJECTION": "tool_poisoning",
-    "TOOL POISONING": "tool_poisoning",
-    "TOOL SHADOWING": "tool_poisoning",
-    "GOAL MANIPULATION": "tool_poisoning",
-    "COERCIVE INJECTION": "tool_poisoning",
-    "CODE EXECUTION": "command_exec",
-    "INJECTION ATTACK": "command_exec",
-    "INJECTION ATTACKS": "command_exec",
-    "COMMAND INJECTION": "command_exec",
-    "SCRIPT INJECTION": "command_exec",
-    "SQL INJECTION": "command_exec",
-    "TEMPLATE INJECTION": "command_exec",
-    "SYSTEM MANIPULATION": "command_exec",
-    "CREDENTIAL HARVESTING": "env_exposure",
-    "DATA EXFILTRATION": "ssrf",
-}
+try:
+    from mcp_guard.cisco_bridge import CISCO_THREAT_MAP, map_cisco_threat as _map_cisco_threat
+except ImportError:  # mcp-guard package not on PYTHONPATH (e.g. some CI subsets)
+    CISCO_THREAT_MAP = {
+        "PROMPT INJECTION": "tool_poisoning",
+        "TOOL POISONING": "tool_poisoning",
+        "TOOL SHADOWING": "tool_poisoning",
+        "GOAL MANIPULATION": "tool_poisoning",
+        "COERCIVE INJECTION": "tool_poisoning",
+        "CODE EXECUTION": "command_exec",
+        "INJECTION ATTACK": "command_exec",
+        "INJECTION ATTACKS": "command_exec",
+        "COMMAND INJECTION": "command_exec",
+        "SCRIPT INJECTION": "command_exec",
+        "SQL INJECTION": "command_exec",
+        "TEMPLATE INJECTION": "command_exec",
+        "SYSTEM MANIPULATION": "command_exec",
+        "CREDENTIAL HARVESTING": "env_exposure",
+        "DATA EXFILTRATION": "ssrf",
+    }
 
-
-def _map_cisco_threat(name: str) -> str:
-    if not name:
-        return "unknown"
-    return CISCO_THREAT_MAP.get(name.upper(), name.lower().replace(" ", "_"))
+    def _map_cisco_threat(name: str) -> str:
+        if not name:
+            return "unknown"
+        return CISCO_THREAT_MAP.get(name.upper(), name.lower().replace(" ", "_"))
 
 
 def normalize_cisco(raw: dict, server_name: str, expected: dict) -> dict[str, Any]:
@@ -584,6 +586,122 @@ def generate_lab_outputs(results_dir: Path, expected_file: Path) -> list[dict[st
             f.write(report)
 
     return all_normalized
+
+
+def generate_cisco_config_outputs(results_dir: Path, fixture_file: Path) -> list[dict[str, Any]]:
+    """Normalize cisco config-mode scans against the OX research corpus.
+
+    The fixture file contains entries with ``name``, ``expected_findings`` and
+    a JSON ``payload``. The runner writes one cisco scan result per case at
+    ``results/raw/cisco-config/<case>.json``. Output: per-case normalized JSON
+    plus an aggregated ``cisco-supply-chain.md`` report. Skipped silently if
+    the raw directory is empty.
+    """
+    raw_dir = results_dir / "raw" / "cisco-config"
+    norm_dir = results_dir / "normalized" / "cisco-config"
+    report_dir = results_dir / "report"
+
+    if not raw_dir.exists() or not any(raw_dir.glob("*.json")):
+        return []
+
+    norm_dir.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    cases_data = load_json(fixture_file, default=[]) or []
+    expected_by_key = {}
+    for case in cases_data:
+        if not isinstance(case, dict):
+            continue
+        name = case.get("name")
+        if not name:
+            continue
+        normalized_key = name.replace(" ", "_").replace("/", "_")
+        expected_by_key[normalized_key] = {
+            "name": name,
+            "source": case.get("source", ""),
+            "expected_findings": case.get("expected_findings", []) or [],
+            "expected_false_positives": case.get("expected_false_positives", []) or [],
+        }
+
+    normalized: list[dict[str, Any]] = []
+    for raw_file in sorted(raw_dir.glob("*.json")):
+        key = raw_file.stem
+        case = expected_by_key.get(key, {})
+        raw, raw_error = load_json_payload(raw_file)
+        expected = {
+            "expected_findings": case.get("expected_findings", []),
+            "expected_false_positives": case.get("expected_false_positives", []),
+        }
+
+        if raw_error:
+            entry = build_failed_lab_result("cisco-config", key, expected, raw_error, raw_file)
+        elif not isinstance(raw, dict):
+            entry = build_failed_lab_result(
+                "cisco-config",
+                key,
+                expected,
+                f"unexpected JSON type in {raw_file.name}: {type(raw).__name__}",
+                raw_file,
+            )
+        else:
+            entry = normalize_cisco(raw, key, expected)
+            entry["scanner_name"] = "cisco-config"
+
+        entry["case_name"] = case.get("name") or key
+        entry["case_source"] = case.get("source", "")
+        normalized.append(entry)
+
+        with open(norm_dir / f"{key}.json", "w") as f:
+            json.dump(entry, f, indent=2)
+            f.write("\n")
+
+    if normalized:
+        report = _generate_cisco_config_report(normalized)
+        with open(report_dir / "cisco-supply-chain.md", "w") as f:
+            f.write(report)
+
+    return normalized
+
+
+def _generate_cisco_config_report(results: list[dict[str, Any]]) -> str:
+    lines = ["# Cisco Supply-Chain Coverage (config mode against OX research corpus)\n"]
+    lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}\n")
+
+    total_tp = sum(len(r["true_positives"]) for r in results)
+    total_fp = sum(len(r["false_positives"]) for r in results)
+    total_fn = sum(len(r["missed_findings"]) for r in results)
+    total_expected = sum(len(r["expected_findings"]) for r in results)
+    successes = sum(1 for r in results if r.get("status", "success") == "success")
+
+    lines.append(f"- **Cases scanned**: {len(results)} ({successes} succeeded)")
+    lines.append(f"- **True Positives**: {total_tp}")
+    lines.append(f"- **False Positives**: {total_fp}")
+    lines.append(f"- **False Negatives**: {total_fn}")
+    lines.append(f"- **Total Expected Findings**: {total_expected}")
+    if total_expected:
+        lines.append(f"- **Recall**: {total_tp/total_expected:.1%}")
+    if total_tp + total_fp:
+        lines.append(f"- **Precision**: {total_tp/(total_tp+total_fp):.1%}")
+    lines.append("")
+    lines.append("> This stage runs `mcp-scanner config --config-path <case>` against the OX research supply-chain corpus. It measures Cisco's *malicious-MCP* detection (its native threat model), not the capability lab.")
+    lines.append("")
+
+    lines.append("| Case | Status | Detected | TP | FP | FN |")
+    lines.append("|---|---|---|---:|---:|---:|")
+    for r in sorted(results, key=lambda item: item.get("case_name", item["target"])):
+        detected = ", ".join(r["detected_findings"]) or "—"
+        lines.append(
+            "| {name} | {status} | {detected} | {tp} | {fp} | {fn} |".format(
+                name=r.get("case_name", r["target"]),
+                status=r.get("status", "success"),
+                detected=detected,
+                tp=len(r["true_positives"]),
+                fp=len(r["false_positives"]),
+                fn=len(r["missed_findings"]),
+            )
+        )
+
+    return "\n".join(lines)
 
 
 def generate_ox_live_outputs(results_dir: Path, expected_file: Path) -> list[dict[str, Any]]:

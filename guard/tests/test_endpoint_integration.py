@@ -185,6 +185,45 @@ class LocalAdminServerCase(unittest.TestCase):
         self.assertIn("connector_metadata_exposure", payload["findings"])
         self.assertIn("config_injection", payload["findings"])
         self.assertIn("cors_misconfiguration", payload["findings"])
+        self.assertIn("provenance", payload)
+        self.assertIn("hidden_transport", payload["provenance"])
+
+    def test_cli_with_cisco_flag_warns_when_binary_missing(self):
+        """--with-cisco should never hard-fail when mcp-scanner isn't on PATH."""
+        import shutil as _shutil
+
+        if _shutil.which("mcp-scanner"):
+            self.skipTest("mcp-scanner is on PATH; this test exercises the missing-binary path")
+
+        cmd = [
+            sys.executable,
+            "-m",
+            "mcp_guard",
+            "scan",
+            "--endpoint",
+            self.base_url,
+            "--with-cisco",
+            "--output",
+            "json",
+        ]
+        env = {
+            "PYTHONPATH": str(REPO_ROOT / "guard") + ":" + str(REPO_ROOT),
+            "PATH": _safe_path_env(),
+        }
+        completed = subprocess.run(
+            cmd,
+            cwd=REPO_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 1, msg=completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertTrue(any("cisco mcp-scanner not on PATH" in note for note in payload.get("notes", [])))
+        # mcp-guard findings still flow as before
+        self.assertIn("hidden_transport", payload["findings"])
 
 
 class FastMCPSubprocessCase(unittest.TestCase):

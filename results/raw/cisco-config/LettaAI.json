@@ -1,0 +1,7 @@
+{
+  "server_url": "/tmp/tmp.GHySn7Qzig/LettaAI.json",
+  "scan_results": [],
+  "requested_analyzers": [
+    "yara"
+  ]
+}

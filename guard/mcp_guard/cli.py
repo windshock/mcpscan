@@ -28,6 +28,21 @@ def main():
     scan_parser.add_argument("--policy", help="Path to custom policy YAML file")
     scan_parser.add_argument("--env", default="production", choices=["production", "development"], help="Target environment")
     scan_parser.add_argument("--output", "-o", choices=["text", "json"], default="text", help="Output format")
+    scan_parser.add_argument(
+        "--with-cisco",
+        action="store_true",
+        help="Also run cisco mcp-scanner against the same target and merge findings (source-tagged).",
+    )
+    scan_parser.add_argument(
+        "--cisco-analyzers",
+        help="Comma-separated cisco analyzers to enable (default: yara; adds behavioral,llm if MCP_SCANNER_LLM_API_KEY is set).",
+    )
+    scan_parser.add_argument(
+        "--cisco-timeout",
+        type=int,
+        default=60,
+        help="Timeout (seconds) for the cisco subprocess (default: 60).",
+    )
 
     discover_parser = subparsers.add_parser("discover", help="Discover likely MCP targets on this macOS host")
     discover_parser.add_argument("--output", "-o", choices=["text", "json"], default="text", help="Output format")
@@ -57,9 +72,13 @@ def main():
 
 def _handle_scan(args):
     policy_engine = PolicyEngine(args.policy)
+    target_kind = "discovered"
+    target_value = None
 
     if args.path:
         scan_result = scan_path(args.path)
+        target_kind = "path"
+        target_value = args.path
     elif args.config:
         config_str = args.config
         if config_str.startswith("{") or config_str.startswith("["):
@@ -71,8 +90,12 @@ def _handle_scan(args):
             except FileNotFoundError:
                 pass
         scan_result = scan_config(config_str)
+        target_kind = "config"
+        target_value = config_str
     elif args.endpoint:
         scan_result = scan_endpoint(args.endpoint)
+        target_kind = "endpoint"
+        target_value = args.endpoint
     else:
         try:
             discovery = discover_targets()
@@ -93,10 +116,16 @@ def _handle_scan(args):
             print(f"Error: {exc}", file=sys.stderr)
             sys.exit(1)
         scan_result = _scan_discovered_candidate(chosen)
+        target_kind = chosen.get("kind") or target_kind
+        target_value = chosen.get("target")
 
     if "error" in scan_result:
         print(f"Error: {scan_result['error']}", file=sys.stderr)
         sys.exit(1)
+
+    cisco_notes: list[str] = []
+    if getattr(args, "with_cisco", False):
+        cisco_notes = _merge_cisco_findings(scan_result, target_kind, target_value, args)
 
     evaluation = policy_engine.evaluate(scan_result, environment=args.env)
 
@@ -104,35 +133,74 @@ def _handle_scan(args):
         # Add policy_verdict to scan result for normalization
         scan_result["policy_verdict"] = evaluation["overall_verdict"]
         scan_result["findings"] = scan_result.get("findings", [])
-        # Normalize findings for JSON output
-        normalized_findings = []
+        provenance: dict[str, list[str]] = {}
+        normalized_findings: list[str] = []
         for f in scan_result.get("findings", []):
-            normalized_findings.append(f.get("pattern_id", f.get("pattern_name", "unknown")))
+            pid = f.get("pattern_id", f.get("pattern_name", "unknown"))
+            normalized_findings.append(pid)
+            sources = provenance.setdefault(pid, [])
+            src = f.get("source") or "mcp-guard"
+            if src not in sources:
+                sources.append(src)
+        for sources in provenance.values():
+            sources.sort()
         output = {
             "target": scan_result["target"],
             "risk": scan_result["risk"],
             "policy_verdict": evaluation["overall_verdict"],
             "environment": args.env,
             "findings": normalized_findings,
+            "provenance": provenance,
             "verdicts": evaluation["verdicts"],
             "recommendations": evaluation["recommendations"],
         }
-        if scan_result.get("notes"):
-            output["notes"] = scan_result["notes"]
+        if scan_result.get("notes") or cisco_notes:
+            output["notes"] = list(scan_result.get("notes") or []) + cisco_notes
         if scan_result.get("probe_summary"):
             output["probe_summary"] = scan_result["probe_summary"]
         print(json.dumps(output, indent=2))
     else:
         print(policy_engine.format_output(evaluation))
-        if scan_result.get("notes"):
+        notes = list(scan_result.get("notes") or []) + cisco_notes
+        if notes:
             print("")
             print("Notes:")
-            for note in scan_result["notes"]:
+            for note in notes:
                 print(f"  - {note}")
 
     # Exit code: 1 if BLOCK, 0 otherwise
     if evaluation["overall_verdict"] == "BLOCK":
         sys.exit(1)
+
+
+def _merge_cisco_findings(scan_result: dict, target_kind: str, target_value: str | None, args) -> list[str]:
+    """Run cisco-mcp-scanner against the same target and append findings.
+
+    Returns notes (empty if everything went smoothly) the caller appends to
+    the user-facing output. Findings already arrive source-tagged from the
+    bridge so the PolicyEngine/JSON output handle them transparently.
+    """
+    from . import cisco_bridge
+
+    if not cisco_bridge.is_available():
+        return ["cisco mcp-scanner not on PATH; --with-cisco skipped"]
+
+    analyzers: list[str] | None = None
+    if args.cisco_analyzers:
+        analyzers = [a.strip() for a in args.cisco_analyzers.split(",") if a.strip()]
+
+    if target_kind == "path" and target_value:
+        result = cisco_bridge.scan_path(target_value, analyzers=analyzers, timeout=args.cisco_timeout)
+    elif target_kind == "config" and target_value:
+        result = cisco_bridge.scan_config(target_value, analyzers=analyzers, timeout=args.cisco_timeout)
+    elif target_kind == "endpoint" and target_value:
+        result = cisco_bridge.scan_endpoint(target_value, analyzers=analyzers, timeout=args.cisco_timeout)
+    else:
+        return [f"--with-cisco does not support target kind '{target_kind}'"]
+
+    findings = scan_result.setdefault("findings", [])
+    findings.extend(result.get("findings") or [])
+    return list(result.get("notes") or [])
 
 
 def _handle_discover(args):

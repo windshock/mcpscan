@@ -6,12 +6,18 @@
   "findings": [
     "authless_endpoint"
   ],
+  "provenance": {
+    "authless_endpoint": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "authless_endpoint",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "reachable without authentication: http://vuln-runtime-only:8000"
+      "indicator": "reachable without authentication: http://vuln-runtime-only:8000",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [
@@ -165,7 +171,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "date": "Mon, 04 May 2026 05:12:31 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -180,7 +186,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "date": "Mon, 04 May 2026 05:12:31 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -195,7 +201,7 @@
         "status": 400,
         "content_type": null,
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "date": "Mon, 04 May 2026 05:12:31 GMT",
           "server": "uvicorn",
           "content-length": "27",
           "connection": "close"
@@ -211,7 +217,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "date": "Mon, 04 May 2026 05:12:31 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -226,7 +232,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "date": "Mon, 04 May 2026 05:12:31 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",
@@ -241,7 +247,7 @@
         "status": 404,
         "content_type": "text/plain; charset=utf-8",
         "headers": {
-          "date": "Sun, 03 May 2026 09:11:33 GMT",
+          "date": "Mon, 04 May 2026 05:12:31 GMT",
           "server": "uvicorn",
           "content-length": "9",
           "content-type": "text/plain; charset=utf-8",

@@ -7,18 +7,28 @@
     "command_exec",
     "tool_poisoning"
   ],
+  "provenance": {
+    "command_exec": [
+      "mcp-guard"
+    ],
+    "tool_poisoning": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "command_exec",
       "severity": "CRITICAL",
       "verdict": "BLOCK",
-      "indicator": "subprocess.run"
+      "indicator": "subprocess.run",
+      "source": "mcp-guard"
     },
     {
       "pattern": "tool_poisoning",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "IMPORTANT:"
+      "indicator": "IMPORTANT:",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

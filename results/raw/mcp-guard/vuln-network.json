@@ -8,24 +8,38 @@
     "cors_misconfiguration",
     "internal_metadata_exposure"
   ],
+  "provenance": {
+    "ssrf": [
+      "mcp-guard"
+    ],
+    "cors_misconfiguration": [
+      "mcp-guard"
+    ],
+    "internal_metadata_exposure": [
+      "mcp-guard"
+    ]
+  },
   "verdicts": [
     {
       "pattern": "ssrf",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "fetch_url"
+      "indicator": "fetch_url",
+      "source": "mcp-guard"
     },
     {
       "pattern": "cors_misconfiguration",
       "severity": "MEDIUM",
       "verdict": "CONDITIONAL",
-      "indicator": "origin: \"*\""
+      "indicator": "origin: \"*\"",
+      "source": "mcp-guard"
     },
     {
       "pattern": "internal_metadata_exposure",
       "severity": "HIGH",
       "verdict": "BLOCK",
-      "indicator": "internal_services"
+      "indicator": "internal_services",
+      "source": "mcp-guard"
     }
   ],
   "recommendations": [

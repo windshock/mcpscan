@@ -1,7 +1,7 @@
 {
   "target": "vuln-exec",
   "scanner_name": "mcpscan",
-  "timestamp": "2026-05-03T09:11:45.945223+00:00",
+  "timestamp": "2026-05-04T05:20:18.996716+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [

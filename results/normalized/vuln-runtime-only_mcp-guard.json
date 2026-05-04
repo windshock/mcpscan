@@ -1,7 +1,7 @@
 {
   "target": "vuln-runtime-only",
   "scanner_name": "mcp-guard",
-  "timestamp": "2026-05-03T09:11:45.958171+00:00",
+  "timestamp": "2026-05-04T05:20:19.002308+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [
