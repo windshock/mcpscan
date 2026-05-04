@@ -12,6 +12,7 @@ __pycache__/
 
 # Generated lab artifacts (raw data + reports are reproducible from `docker compose run --rm runner`)
 results/workdir/
+results/**/*.tmp.*
 *.log
 
 # Editor / OS
