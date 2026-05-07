@@ -164,6 +164,57 @@ services:
     networks:
       - mcp-lab
 
+  # ── Public Tunnel Exposure (no signup required) ────────
+  # These services publicly expose internal MCP servers via free tunnels
+  # so mcp-guard's discovery can be exercised against the tunnel-detection
+  # path. ngrok is intentionally omitted because it now requires an account
+  # token; the three below need no credentials.
+  cloudflared-tunnel:
+    image: cloudflare/cloudflared:latest
+    profiles:
+      - tunnels
+    command:
+      - tunnel
+      - --no-autoupdate
+      - --url
+      - http://vuln-authless:8000
+    networks:
+      - mcp-lab
+    depends_on:
+      - vuln-authless
+    restart: unless-stopped
+
+  localtunnel:
+    image: node:20-alpine
+    profiles:
+      - tunnels
+    command:
+      - sh
+      - -c
+      - "npx --yes localtunnel --port 3000 --local-host vuln-network --print-requests"
+    networks:
+      - mcp-lab
+    depends_on:
+      - vuln-network
+    restart: unless-stopped
+
+  bore-tunnel:
+    image: ekzhang/bore:latest
+    profiles:
+      - tunnels
+    command:
+      - local
+      - "8000"
+      - --local-host
+      - vuln-config-exec
+      - --to
+      - bore.pub
+    networks:
+      - mcp-lab
+    depends_on:
+      - vuln-config-exec
+    restart: unless-stopped
+
   # ── Scanners ───────────────────────────────────────────
   mcpscan:
     build:

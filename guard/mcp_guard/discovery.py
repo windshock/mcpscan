@@ -167,6 +167,8 @@ def discover_targets(cwd: str | None = None, enable_probe: bool = True) -> dict[
         docker_error = str(exc)
 
     tunnel_links = _discover_tunnel_links(process_map)
+    if docker_available:
+        tunnel_links.extend(_discover_docker_tunnel_links())
     _apply_tunnel_links(candidates, tunnel_links)
 
     merged = _merge_candidates(candidates)
@@ -507,7 +509,292 @@ def _discover_tunnel_links(process_map: dict[int, dict[str, Any]]) -> list[dict[
     links = []
     links.extend(_discover_ngrok_links(process_map))
     links.extend(_discover_cloudflared_links(process_map))
+    links.extend(_discover_localtunnel_links(process_map))
+    links.extend(_discover_bore_links(process_map))
     return links
+
+
+def _discover_localtunnel_links(process_map: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:
+    """Find host-side `lt`/localtunnel processes and extract their .loca.lt URL."""
+    links = []
+    for process in process_map.values():
+        command = process.get("command", "") or ""
+        if "localtunnel" not in command and "/lt " not in command and not command.endswith(" lt"):
+            continue
+        port = _extract_option(command, "--port") or _extract_option(command, "-p") or "80"
+        local_host = _extract_option(command, "--local-host") or "127.0.0.1"
+        upstream = f"http://{local_host}:{port}"
+
+        public_url = None
+        for fd in ("stdout", "stderr"):
+            path = process.get(fd)
+            if not path:
+                continue
+            public_url = _extract_localtunnel_url(Path(path))
+            if public_url:
+                break
+
+        if public_url:
+            links.append(
+                {"provider": "localtunnel", "public_url": public_url, "upstream": upstream}
+            )
+    return links
+
+
+def _discover_bore_links(process_map: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:
+    """Find host-side `bore local` processes and extract their bore.pub:port URL."""
+    links = []
+    for process in process_map.values():
+        command = process.get("command", "") or ""
+        if "bore " not in command and not command.endswith(" bore"):
+            continue
+        if "local" not in command:
+            continue
+        # bore local <port> --local-host <host> --to <server>
+        tokens = _command_tokens(command)
+        port = None
+        local_host = "127.0.0.1"
+        to_server = "bore.pub"
+        for idx, token in enumerate(tokens):
+            if token == "local" and idx + 1 < len(tokens):
+                port = tokens[idx + 1]
+            if token == "--local-host" and idx + 1 < len(tokens):
+                local_host = tokens[idx + 1]
+            if token == "--to" and idx + 1 < len(tokens):
+                to_server = tokens[idx + 1]
+        if not port:
+            continue
+        upstream = f"http://{local_host}:{port}"
+
+        public_url = None
+        for fd in ("stdout", "stderr"):
+            path = process.get(fd)
+            if not path:
+                continue
+            remote_port = _extract_bore_remote_port(Path(path))
+            if remote_port:
+                public_url = f"tcp://{to_server}:{remote_port}"
+                break
+
+        if public_url:
+            links.append(
+                {"provider": "bore", "public_url": public_url, "upstream": upstream}
+            )
+    return links
+
+
+def _extract_localtunnel_url(path: Path) -> str | None:
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        data = path.read_text(errors="ignore")[-65536:]
+    except OSError:
+        return None
+    match = re.search(r"https://[a-zA-Z0-9-]+\.loca\.lt", data)
+    return match.group(0) if match else None
+
+
+def _extract_bore_remote_port(path: Path) -> str | None:
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        data = path.read_text(errors="ignore")[-65536:]
+    except OSError:
+        return None
+    match = re.search(r"bore\.pub:(\d+)", data)
+    return match.group(1) if match else None
+
+
+def _discover_docker_tunnel_links() -> list[dict[str, Any]]:
+    """Find tunnel containers on the lab docker network and read their logs.
+
+    Recognizes cloudflared / localtunnel / bore containers by image and
+    command pattern, calls `docker logs <name>` to scrape the public URL
+    from stdout, and returns standard tunnel-link dicts. The upstream is
+    rewritten to the host-mapped form so `_apply_tunnel_links` can match
+    it against the docker endpoint candidates we already produced.
+    """
+    if not shutil.which("docker"):
+        return []
+
+    try:
+        ps_output = _run_command(["docker", "ps", "--format", "{{json .}}"], check=False)
+    except RuntimeError:
+        return []
+    ps_entries = parse_docker_ps_output(ps_output)
+    if not ps_entries:
+        return []
+    container_names = [entry["Names"] for entry in ps_entries if entry.get("Names")]
+    try:
+        inspect_output = _run_command(["docker", "inspect", *container_names], check=False)
+    except RuntimeError:
+        return []
+    inspections = parse_docker_inspect_output(inspect_output)
+
+    # service_name -> "127.0.0.1:HOST_PORT" lookup so we can rewrite
+    # internal tunnel targets ("http://vuln-authless:8000") into the
+    # host-mapped form discovery already emits as candidate targets.
+    service_to_host: dict[str, str] = {}
+    for item in inspections:
+        config = item.get("Config") or {}
+        labels = config.get("Labels") or {}
+        service = labels.get("com.docker.compose.service")
+        if not service:
+            continue
+        port_mappings = (item.get("NetworkSettings") or {}).get("Ports") or {}
+        for port_proto, bindings in port_mappings.items():
+            if not bindings:
+                continue
+            container_port = port_proto.split("/")[0]
+            for binding in bindings:
+                host_port = binding.get("HostPort")
+                if host_port:
+                    service_to_host[f"{service}:{container_port}"] = (
+                        f"127.0.0.1:{host_port}"
+                    )
+
+    links: list[dict[str, Any]] = []
+    for item in inspections:
+        name = (item.get("Name") or "").lstrip("/")
+        config = item.get("Config") or {}
+        image = (config.get("Image") or "").lower()
+        cmd_tokens = config.get("Cmd") or []
+        cmd_str = " ".join(str(t) for t in cmd_tokens)
+
+        provider = None
+        if image.startswith("cloudflare/cloudflared") or "cloudflared" in image:
+            provider = "cloudflared"
+        elif "localtunnel" in cmd_str or "loca.lt" in cmd_str:
+            provider = "localtunnel"
+        elif image.startswith("ekzhang/bore") or (
+            cmd_tokens and cmd_tokens[0] == "local" and "bore" in cmd_str.lower()
+        ):
+            provider = "bore"
+
+        if not provider or not name:
+            continue
+
+        log_text = _docker_logs(name)
+        if not log_text:
+            continue
+
+        upstream = _extract_tunnel_upstream(provider, cmd_tokens, cmd_str)
+        upstream_host_form = _rewrite_upstream_to_host(upstream, service_to_host)
+
+        public_url = None
+        if provider == "cloudflared":
+            match = re.search(r"https://[-a-zA-Z0-9.]+\.trycloudflare\.com", log_text)
+            if match:
+                public_url = match.group(0)
+        elif provider == "localtunnel":
+            match = re.search(r"https://[a-zA-Z0-9-]+\.loca\.lt", log_text)
+            if match:
+                public_url = match.group(0)
+        elif provider == "bore":
+            match = re.search(r"bore\.pub:(\d+)", log_text)
+            if match:
+                public_url = f"tcp://bore.pub:{match.group(1)}"
+
+        if public_url and (upstream_host_form or upstream):
+            links.append(
+                {
+                    "provider": provider,
+                    "public_url": public_url,
+                    "upstream": upstream_host_form or upstream,
+                    "container": name,
+                }
+            )
+    return links
+
+
+def _extract_tunnel_upstream(
+    provider: str, cmd_tokens: list[str], cmd_str: str
+) -> str | None:
+    if provider == "cloudflared":
+        for idx, token in enumerate(cmd_tokens):
+            if token == "--url" and idx + 1 < len(cmd_tokens):
+                return cmd_tokens[idx + 1]
+        # fallback: extract via shared regex
+        match = re.search(r"--url\s+(\S+)", cmd_str)
+        return match.group(1) if match else None
+    if provider == "localtunnel":
+        port = None
+        host = None
+        for idx, token in enumerate(cmd_tokens):
+            if token in ("--port", "-p") and idx + 1 < len(cmd_tokens):
+                port = cmd_tokens[idx + 1]
+            if token == "--local-host" and idx + 1 < len(cmd_tokens):
+                host = cmd_tokens[idx + 1]
+        # Fallback: when the container Cmd is `sh -c "..."` the actual
+        # localtunnel flags live inside the shell string; pull them with
+        # regex against the joined Cmd.
+        if not port:
+            match = re.search(r"--port[ =](\d+)", cmd_str)
+            if match:
+                port = match.group(1)
+        if not host:
+            match = re.search(r"--local-host[ =](\S+)", cmd_str)
+            if match:
+                host = match.group(1)
+        if port:
+            return f"http://{host or '127.0.0.1'}:{port}"
+        return None
+    if provider == "bore":
+        port = None
+        host = None
+        for idx, token in enumerate(cmd_tokens):
+            if token == "local" and idx + 1 < len(cmd_tokens):
+                port = cmd_tokens[idx + 1]
+            if token == "--local-host" and idx + 1 < len(cmd_tokens):
+                host = cmd_tokens[idx + 1]
+        if not port:
+            match = re.search(r"\blocal\s+(\d+)", cmd_str)
+            if match:
+                port = match.group(1)
+        if not host:
+            match = re.search(r"--local-host[ =](\S+)", cmd_str)
+            if match:
+                host = match.group(1)
+        if port:
+            return f"http://{host or '127.0.0.1'}:{port}"
+    return None
+
+
+def _rewrite_upstream_to_host(
+    upstream: str | None, service_to_host: dict[str, str]
+) -> str | None:
+    """Convert "http://vuln-authless:8000" → "http://127.0.0.1:HOST_PORT" if
+    the service is published. Returns None if upstream is missing or no
+    host mapping is available (caller can fall back to the raw upstream)."""
+    if not upstream:
+        return None
+    parsed = urlparse(upstream)
+    host = parsed.hostname or ""
+    port = parsed.port
+    if not host or not port:
+        return None
+    key = f"{host}:{port}"
+    if key in service_to_host:
+        return f"{parsed.scheme}://{service_to_host[key]}"
+    return None
+
+
+def _docker_logs(container: str, tail: int = 200) -> str:
+    if not shutil.which("docker") or not container:
+        return ""
+    try:
+        result = subprocess.run(
+            ["docker", "logs", "--tail", str(tail), container],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except subprocess.SubprocessError:
+        return ""
+    if result.returncode != 0:
+        return ""
+    return (result.stdout or "") + "\n" + (result.stderr or "")
 
 
 def _discover_ngrok_links(process_map: dict[int, dict[str, Any]]) -> list[dict[str, Any]]:

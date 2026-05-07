@@ -73,10 +73,10 @@ There are three ways to use this repo, in increasing order of involvement:
 
 ```bash
 # Latest tagged release wheel
-pip install https://github.com/windshock/mcpscan/releases/latest/download/mcp_guard-0.2.2-py3-none-any.whl
+pip install https://github.com/windshock/mcpscan/releases/latest/download/mcp_guard-0.2.3-py3-none-any.whl
 
 # With cisco supply-chain detection (yara offline; behavioral/llm need MCP_SCANNER_LLM_API_KEY)
-pip install 'https://github.com/windshock/mcpscan/releases/latest/download/mcp_guard-0.2.2-py3-none-any.whl[cisco]'
+pip install 'https://github.com/windshock/mcpscan/releases/latest/download/mcp_guard-0.2.3-py3-none-any.whl[cisco]'
 
 mcp-guard scan --path ./your-mcp-server
 mcp-guard scan --config ./mcp.json --with-cisco
