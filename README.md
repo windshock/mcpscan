@@ -65,6 +65,38 @@ Bulk modes:
 - `--auto` runs `discover` and scans the highest-ranked candidate.
 - `--auto-all` scans **every** discovered candidate (one section per target). Exit code is 1 if any target evaluates to BLOCK.
 
+## Public Tunnel Detection
+
+Discovery recognises three free no-signup tunnel paths and the legacy ngrok flow, both as host processes and as docker compose sidecars:
+
+| Tunnel | Detected via | Public URL pattern |
+|---|---|---|
+| cloudflared (quick tunnel) | host process or container logs | `https://*.trycloudflare.com` |
+| localtunnel | host `lt`/npx process or container logs | `https://*.loca.lt` |
+| bore | host `bore local` process or container logs | `tcp://bore.pub:<port>` |
+| ngrok | host process + local API (`/api/endpoints`) | `https://*.ngrok-free.app` (token required) |
+
+When a tunnel forwards to a local MCP, `mcp-guard discover` and `mcp-guard scan` attach the public URL to the same candidate / target metadata so vulnerability findings and supply-chain exposure show up together:
+
+```
+Target details:
+  docker:
+    container: mcp-lab-vuln-authless-1
+    compose_service: vuln-authless
+  public_tunnels:
+    - provider=cloudflared,
+      public_url=https://abc.trycloudflare.com,
+      container=mcp-lab-cloudflared-tunnel-1
+```
+
+The lab includes optional tunnel sidecars under the `tunnels` compose profile:
+
+```bash
+docker compose --profile tunnels up -d
+# wait ~30s for cloudflared/localtunnel/bore to register their public URLs
+mcp-guard discover | grep public_urls -A1
+```
+
 ## Install
 
 There are three ways to use this repo, in increasing order of involvement:

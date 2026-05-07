@@ -38,6 +38,10 @@ mcp-guard scan --auto-all
 
 `--auto-all` walks every listening port + known MCP project marker, scans each, and emits one section per target. Exit code is 1 if any target evaluates to BLOCK. Wall-clock cost grows with the number of listening services on your host (each non-MCP port costs roughly 8–15 s in connection timeouts), so prefer `--auto` or an explicit `--endpoint` for tight CI loops.
 
+## Public tunnel discovery
+
+When a local MCP is also published over a free tunnel (cloudflared, localtunnel, bore, or ngrok), discovery attaches the public URL to the same candidate so the supply-chain exposure shows up next to the local capability findings. The detection covers both host-side processes (parses each tool's stdout/stderr or local API) and docker compose sidecars (reads `docker logs <container>` and rewrites the internal upstream to the host-mapped form). ngrok requires an authtoken; the other three need no account.
+
 JSON output (`--output json`) tags each finding with `source` (`mcp-guard`, `cisco-yara`, `cisco-behavioral`, `cisco-llm`) and emits a `provenance` map keyed by pattern id.
 
 Verbose logging:

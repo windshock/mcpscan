@@ -38,6 +38,20 @@ Two ways:
 1. **One-shot via the CLI**: `mcp-guard scan ... --with-cisco`. The CLI runs cisco against the same target (path / config / endpoint) and merges findings with a `source` tag. The PolicyEngine treats any cisco `HIGH`/`CRITICAL` finding as `BLOCK` regardless of environment, because Cisco's "harmful" classification implies confirmed-malicious authoring rather than a capability default-to-conditional.
 2. **Lab benchmark column**: see `results/report/comparison.md` — `mcp-guard combined` row gives the union of source + endpoint scans, the `cisco-config` column (when run) shows cisco against the supply-chain corpus.
 
+## Public tunnel exposure
+
+A third axis lives between the two threat models above: a developer's *honest* MCP can become a *supply-chain risk* the moment it gets published over a free tunnel (cloudflared, localtunnel, bore, ngrok). Discovery recognises each tunnel — both host processes and docker compose sidecars — and attaches the public URL to the same candidate as the local MCP. So when scan output reads:
+
+```
+Target: http://127.0.0.1:3102/sse
+  docker.compose_service: vuln-authless
+  public_tunnels: [cloudflared → https://abc.trycloudflare.com]
+Risk: HIGH    Policy: BLOCK
+Vulnerabilities: env_exposure, tool_poisoning, authless_endpoint, ...
+```
+
+…the operator sees both: "this MCP has these capability gaps" *and* "this MCP is reachable from the public internet right now". That combination is the supply-chain risk picture. Run the lab with `docker compose --profile tunnels up -d` to exercise the path against real public URLs.
+
 ## Operational notes
 
 - Cisco's deeper analyzers (`behavioral`, `llm`) need an LLM API key in `MCP_SCANNER_LLM_API_KEY`. Without one, `--with-cisco` falls back to `yara` only.
