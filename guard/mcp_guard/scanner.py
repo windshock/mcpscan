@@ -234,7 +234,15 @@ def scan_endpoint_info(tool_list: list[dict], server_info: dict = None) -> dict:
     return _build_result("endpoint", matches, json.dumps(tool_list, indent=2))
 
 
-def _endpoint_match(pattern_id: str, indicator: str) -> dict:
+def _endpoint_match(pattern_id: str, indicator: str, *, confidence: str = "high") -> dict:
+    """Build a finding dict tagged with optional confidence.
+
+    Endpoint scans cannot see server-side validation. When a finding fires
+    purely from the JSON schema of a tool (e.g. "this tool accepts a path
+    parameter"), the surface is suspicious but not a confirmed exploit;
+    callers stamp confidence="low" so the PolicyEngine can downgrade BLOCK
+    verdicts to CONDITIONAL.
+    """
     from .patterns import PATTERNS
 
     pattern = PATTERNS.get(
@@ -251,6 +259,7 @@ def _endpoint_match(pattern_id: str, indicator: str) -> dict:
         "severity": pattern["severity"],
         "matched_indicator": indicator,
         "policy": pattern["policy"],
+        "confidence": confidence,
     }
 
 
@@ -285,63 +294,81 @@ def _findings_from_tool_list(tool_list: list[dict]) -> list[dict]:
         lname = name.lower()
         ldesc = desc.lower()
 
+        # Track findings already emitted for THIS tool to suppress noise
+        # like "command_exec via name" + "command_exec via cmd param" both
+        # firing on the same tool.
+        per_tool_seen: set[str] = set()
+
+        def _emit_for_tool(pattern_id: str, indicator: str, *, confidence: str = "high") -> None:
+            if pattern_id in per_tool_seen:
+                return
+            per_tool_seen.add(pattern_id)
+            matches.append(_endpoint_match(pattern_id, indicator, confidence=confidence))
+
         if (
             lname in {"execute", "run", "exec", "shell"}
             or any(e in lname for e in exec_names)
         ):
-            matches.append(
-                _endpoint_match("command_exec", f"tool name suggests command execution: {name}")
-            )
+            _emit_for_tool("command_exec", f"tool name suggests command execution: {name}")
 
         schema = tool.get("inputSchema", {}) or {}
         properties = schema.get("properties", {}) or {}
 
         if "cmd" in properties or "command" in properties:
             has_command_param = True
-            matches.append(
-                _endpoint_match(
-                    "command_exec",
-                    f"tool '{name}' accepts cmd/command parameter",
-                )
-            )
+            _emit_for_tool("command_exec", f"tool '{name}' accepts cmd/command parameter")
         if "args" in properties:
             has_args_param = True
         if "url" in properties:
-            matches.append(
-                _endpoint_match("ssrf", f"tool '{name}' accepts url parameter")
+            # URL parameter alone is "needs verification", not confirmed SSRF.
+            _emit_for_tool(
+                "ssrf",
+                f"tool '{name}' accepts url parameter (server-side validation not visible)",
+                confidence="low",
             )
         if "path" in properties:
+            # Decide which path-shaped pattern fits:
+            #   write/delete/remove tools  → unrestricted_file_write
+            #   list_*/dir_*/scan_* tools  → unrestricted_directory_listing
+            #   anything else with path    → unrestricted_file_read (low confidence —
+            #     server-side validation not visible from endpoint)
             if "write" in lname or "delete" in lname or "remove" in lname:
-                matches.append(
-                    _endpoint_match(
-                        "unrestricted_file_write",
-                        f"tool '{name}' accepts path parameter for write/delete",
-                    )
+                _emit_for_tool(
+                    "unrestricted_file_write",
+                    f"tool '{name}' accepts path parameter for write/delete",
+                    confidence="low",
                 )
                 capabilities["write" if "write" in lname else "delete"] = True
+            elif (
+                lname.startswith("list_")
+                or lname.startswith("dir_")
+                or lname.startswith("scan_")
+                or "_directory" in lname
+                or lname == "ls"
+            ):
+                _emit_for_tool(
+                    "unrestricted_directory_listing",
+                    f"tool '{name}' accepts path parameter for directory enumeration",
+                    confidence="low",
+                )
             else:
-                matches.append(
-                    _endpoint_match(
-                        "unrestricted_file_read",
-                        f"tool '{name}' accepts path parameter",
-                    )
+                _emit_for_tool(
+                    "unrestricted_file_read",
+                    f"tool '{name}' accepts path parameter (server-side validation not visible)",
+                    confidence="low",
                 )
                 if "read" in lname:
                     capabilities["read"] = True
 
         if any(token in lname for token in config_load_names) and "url" in properties:
-            matches.append(
-                _endpoint_match(
-                    "remote_config_loading",
-                    f"tool '{name}' loads configuration from a remote URL",
-                )
+            _emit_for_tool(
+                "remote_config_loading",
+                f"tool '{name}' loads configuration from a remote URL",
             )
         if any(token in lname for token in config_apply_names + config_load_names):
-            matches.append(
-                _endpoint_match(
-                    "config_to_execution",
-                    f"tool '{name}' applies a configuration that can drive execution",
-                )
+            _emit_for_tool(
+                "config_to_execution",
+                f"tool '{name}' applies a configuration that can drive execution",
             )
         if lname.startswith("delete_") or "remove_file" in lname:
             capabilities["delete"] = True
@@ -354,11 +381,9 @@ def _findings_from_tool_list(tool_list: list[dict]) -> list[dict]:
         if any(token in lname for token in metadata_keywords) or any(
             phrase in ldesc for phrase in metadata_descriptions
         ):
-            matches.append(
-                _endpoint_match(
-                    "internal_metadata_exposure",
-                    f"tool '{name}' exposes internal metadata",
-                )
+            _emit_for_tool(
+                "internal_metadata_exposure",
+                f"tool '{name}' exposes internal metadata",
             )
 
         if "Returns all environment variables" in desc or lname in {
@@ -366,11 +391,9 @@ def _findings_from_tool_list(tool_list: list[dict]) -> list[dict]:
             "get_env",
             "dump_env",
         }:
-            matches.append(
-                _endpoint_match(
-                    "env_exposure",
-                    f"tool '{name}' exposes environment variables",
-                )
+            _emit_for_tool(
+                "env_exposure",
+                f"tool '{name}' exposes environment variables",
             )
 
     if has_command_param and has_args_param and allowlist_hint:
@@ -419,13 +442,37 @@ def _findings_from_probe_markers(summary: dict) -> list[dict]:
     return matches
 
 
+_MCP_ADMIN_BODY_TOKENS = (
+    # Anything below indicates the response is genuinely about MCP transport
+    # / connectors / config — not a generic auth/CSRF/HTML page that simply
+    # accepted the request. CSRF errors, login pages, and tooling APIs that
+    # happen to share the path won't trip on these.
+    "stdio", "transport", "connector", "mcpServer", "mcpservers", "applied",
+    "PGPASSWORD", "internal-db-password",
+)
+
+
+def _looks_like_mcp_admin_body(body: str) -> bool:
+    body_lower = (body or "").lower()
+    return any(token.lower() in body_lower for token in _MCP_ADMIN_BODY_TOKENS)
+
+
 def _findings_from_hidden_probes(hidden: list[dict]) -> list[dict]:
+    """Translate hidden-path probe results into MCP admin findings.
+
+    Only fire when the response *body* contains MCP-specific keywords. A
+    generic 200/400/403 with a CSRF error or HTML page is not enough — IDE
+    plugins, language servers, and proxy dashboards all expose `/api/*`
+    paths but none of those are MCP admin endpoints.
+    """
     matches: list[dict] = []
     for probe in hidden:
         path = urlparse(probe.get("url", "")).path
         status = probe.get("status")
         body = (probe.get("body_excerpt") or "")
         if status is None or status == 404:
+            continue
+        if not _looks_like_mcp_admin_body(body):
             continue
         if path == "/api/connectors":
             matches.append(
@@ -455,7 +502,7 @@ def _findings_from_hidden_probes(hidden: list[dict]) -> list[dict]:
                     f"hidden admin endpoint reachable: {path}",
                 )
             )
-            if "applied" in body or "Configuration" in body:
+            if "applied" in body.lower() or "configuration" in body.lower():
                 matches.append(
                     _endpoint_match(
                         "config_injection",

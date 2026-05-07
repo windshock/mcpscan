@@ -274,6 +274,17 @@ PATTERNS = {
         "policy": "BLOCK",
         "recommendation": "Eliminate hidden runtime triggers. Treat all execution paths as reachable.",
     },
+    "unrestricted_directory_listing": {
+        "id": "PAT-022",
+        "name": "Unrestricted Directory Listing",
+        "severity": "MEDIUM",
+        "description": "Tool enumerates arbitrary directory contents (file structure disclosure, not file content read)",
+        "indicators": [
+            "list_directory", "dir_list", "scan_directory", "os.listdir",
+        ],
+        "policy": "CONDITIONAL",
+        "recommendation": "Restrict directory enumeration to allowlisted paths or require an authenticated operator role.",
+    },
 }
 
 

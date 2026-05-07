@@ -116,6 +116,11 @@ DEFAULT_POLICY = {
             "verdict": "BLOCK",
             "environments": {"production": "BLOCK", "development": "CONDITIONAL"},
         },
+        {
+            "pattern": "unrestricted_directory_listing",
+            "verdict": "CONDITIONAL",
+            "environments": {"production": "CONDITIONAL", "development": "ALLOW"},
+        },
     ],
     "defaults": {
         "unknown_pattern": "CONDITIONAL",
@@ -146,6 +151,7 @@ class PolicyEngine:
             rule = self.rules.get(pattern_id)
             source = finding.get("source") or "mcp-guard"
             severity = finding.get("severity", "UNKNOWN")
+            confidence = (finding.get("confidence") or "high").lower()
 
             # Cisco findings flag confirmed-malicious authoring (not a
             # capability that depends on environment), so HIGH/CRITICAL
@@ -166,21 +172,28 @@ class PolicyEngine:
 
             if rule:
                 env_verdict = rule.get("environments", {}).get(environment, rule.get("verdict", "CONDITIONAL"))
-                verdicts.append({
-                    "pattern": pattern_id,
-                    "severity": severity,
-                    "verdict": env_verdict,
-                    "indicator": finding.get("matched_indicator", ""),
-                    "source": source,
-                })
             else:
-                verdicts.append({
-                    "pattern": pattern_id,
-                    "severity": severity,
-                    "verdict": self.defaults.get("unknown_pattern", "CONDITIONAL"),
-                    "indicator": finding.get("matched_indicator", ""),
-                    "source": source,
-                })
+                env_verdict = self.defaults.get("unknown_pattern", "CONDITIONAL")
+
+            # Confidence demotion: schema-only or other low-confidence matches
+            # (e.g. "tool has path param" without seeing server-side validation)
+            # never reach BLOCK. They surface as CONDITIONAL — operator should
+            # confirm with a code review or static scan.
+            if confidence == "low" and env_verdict == "BLOCK":
+                _logger.debug(
+                    "policy: low-confidence finding demoted BLOCK -> CONDITIONAL (pattern=%s)",
+                    pattern_id,
+                )
+                env_verdict = "CONDITIONAL"
+
+            verdicts.append({
+                "pattern": pattern_id,
+                "severity": severity,
+                "verdict": env_verdict,
+                "indicator": finding.get("matched_indicator", ""),
+                "source": source,
+                "confidence": confidence,
+            })
 
         # Overall verdict: most restrictive wins
         overall = self._compute_overall_verdict(verdicts)

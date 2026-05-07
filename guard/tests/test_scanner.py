@@ -131,6 +131,110 @@ class ScannerRegressionTests(unittest.TestCase):
         self.assertIn("connector_metadata_exposure", finding_ids)
         self.assertIn("config_injection", finding_ids)
 
+    def test_hidden_admin_findings_require_mcp_body_keywords(self):
+        """403 CSRF / generic HTML on /api/* must not trip hidden_transport."""
+        fake_probe = {
+            "base_url": "http://127.0.0.1:54300",
+            "auth_required": None,
+            "reachable": True,
+            "tools": [],
+            "markers": [
+                "hidden:/api/connectors",
+                "hidden:/api/config",
+                "hidden:/api/transport",
+            ],
+            "hidden_probes": [
+                {
+                    "url": "http://127.0.0.1:54300/api/connectors",
+                    "status": 403,
+                    "body_excerpt": "Invalid CSRF token",
+                },
+                {
+                    "url": "http://127.0.0.1:54300/api/transport",
+                    "status": 403,
+                    "body_excerpt": "Invalid CSRF token",
+                },
+                {
+                    "url": "http://127.0.0.1:54300/api/config",
+                    "status": 403,
+                    "body_excerpt": "Invalid CSRF token",
+                },
+            ],
+        }
+        with patch("mcp_guard.scanner.probe_endpoint", return_value=fake_probe):
+            result = scan_endpoint("http://127.0.0.1:54300")
+        finding_ids = {finding["pattern_id"] for finding in result["findings"]}
+        self.assertNotIn("hidden_transport", finding_ids)
+        self.assertNotIn("connector_metadata_exposure", finding_ids)
+        self.assertNotIn("config_injection", finding_ids)
+
+    def test_endpoint_path_param_emits_low_confidence(self):
+        """schema-only `path` parameter must emit low-confidence finding."""
+        fake_probe = {
+            "base_url": "http://x:1",
+            "auth_required": None,
+            "reachable": True,
+            "tools": [
+                {
+                    "name": "read_file",
+                    "description": "Reads a file from the /data directory only.",
+                    "inputSchema": {"properties": {"path": {"type": "string"}}},
+                }
+            ],
+            "markers": [],
+            "hidden_probes": [],
+        }
+        with patch("mcp_guard.scanner.probe_endpoint", return_value=fake_probe):
+            result = scan_endpoint("http://x:1")
+        path_findings = [
+            f for f in result["findings"] if f["pattern_id"] == "unrestricted_file_read"
+        ]
+        self.assertTrue(path_findings)
+        self.assertEqual(path_findings[0]["confidence"], "low")
+
+    def test_endpoint_list_directory_emits_directory_listing_pattern(self):
+        """list_directory should not be classified as unrestricted_file_read."""
+        fake_probe = {
+            "base_url": "http://x:1",
+            "auth_required": None,
+            "reachable": True,
+            "tools": [
+                {
+                    "name": "list_directory",
+                    "description": "Lists contents of any directory on the system.",
+                    "inputSchema": {"properties": {"path": {"type": "string"}}},
+                }
+            ],
+            "markers": [],
+            "hidden_probes": [],
+        }
+        with patch("mcp_guard.scanner.probe_endpoint", return_value=fake_probe):
+            result = scan_endpoint("http://x:1")
+        finding_ids = {finding["pattern_id"] for finding in result["findings"]}
+        self.assertIn("unrestricted_directory_listing", finding_ids)
+        self.assertNotIn("unrestricted_file_read", finding_ids)
+
+    def test_endpoint_dedups_same_tool_multi_indicator(self):
+        """One tool firing command_exec via name + cmd param should emit once."""
+        fake_probe = {
+            "base_url": "http://x:1",
+            "auth_required": None,
+            "reachable": True,
+            "tools": [
+                {
+                    "name": "execute_command",
+                    "description": "Run a shell command.",
+                    "inputSchema": {"properties": {"command": {"type": "string"}}},
+                }
+            ],
+            "markers": [],
+            "hidden_probes": [],
+        }
+        with patch("mcp_guard.scanner.probe_endpoint", return_value=fake_probe):
+            result = scan_endpoint("http://x:1")
+        cmd_exec = [f for f in result["findings"] if f["pattern_id"] == "command_exec"]
+        self.assertEqual(len(cmd_exec), 1)
+
     def test_scan_endpoint_detects_command_exec_via_args(self):
         fake_probe = {
             "base_url": "http://vuln-allowlist-bypass:3000",

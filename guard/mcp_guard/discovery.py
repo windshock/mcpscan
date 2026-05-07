@@ -35,6 +35,48 @@ MCP_TEXT_MARKERS = (
     "sse",
     "mcpservers",
 )
+# Path prefixes that are never user-authored MCP servers — package managers,
+# system frameworks, third-party app bundles. Discovery must skip these even
+# when they contain `package.json`/`Dockerfile`/etc., otherwise mcp-guard
+# scans its own source tree (or homebrew, IDE installations, …) and produces
+# self-reference / generic-pattern false positives.
+EXCLUDED_PATH_PREFIXES = (
+    "/System",
+    "/usr",
+    "/bin",
+    "/sbin",
+    "/private/var",
+    "/Library/Apple",
+    "/Library/Frameworks",
+    "/Library/Developer",
+    "/Library/Caches",
+    "/Library/Application Support",
+    "/Applications",
+    "/opt",
+    "/Volumes",
+)
+# Directory basenames to exclude wherever they appear (IDE/editor caches,
+# language package directories). Tested against any segment of the path.
+EXCLUDED_PATH_NAMES = frozenset({
+    ".git",
+    ".svn",
+    ".hg",
+    ".windsurf",
+    ".cursor",
+    ".vscode",
+    ".vscode-server",
+    ".idea",
+    "node_modules",
+    "__pycache__",
+    "site-packages",
+    "dist-info",
+    ".venv",
+    "venv",
+    "env",
+    ".tox",
+    "build",
+    "dist",
+})
 CURRENT_USER = os.environ.get("USER", "")
 
 
@@ -676,6 +718,14 @@ def _extract_candidate_paths(process: dict[str, Any], base_dir: Path) -> list[Pa
 
 
 def _normalize_project_path(path: Path, base_dir: Path) -> Path | None:
+    """Walk up `path` looking for a directory that (a) is user code and (b)
+    has at least one MCP-specific marker.
+
+    A bare `package.json` / `Dockerfile` / `pyproject.toml` is not enough —
+    those are present in homebrew, IDE extensions, every Node project, etc.
+    We require a `mcp.json` / `mcp-config.json` file or an MCP import string
+    inside one of the typical entry files (server.py, src/server.ts, …).
+    """
     if not path.exists():
         return None
 
@@ -686,11 +736,25 @@ def _normalize_project_path(path: Path, base_dir: Path) -> Path | None:
     for probe in [candidate, *candidate.parents[:4]]:
         if not _looks_like_user_path(probe):
             continue
-        if any((probe / marker).exists() for marker in PROJECT_MARKERS):
+        if not any((probe / marker).exists() for marker in PROJECT_MARKERS):
+            continue
+        if _has_mcp_evidence(probe):
             return probe
-    if candidate.resolve().is_relative_to(base_dir):
-        return candidate
+
+    resolved = candidate.resolve()
+    try:
+        if resolved.is_relative_to(base_dir) and _has_mcp_evidence(candidate):
+            return candidate
+    except (ValueError, OSError):
+        pass
     return None
+
+
+def _has_mcp_evidence(path: Path) -> bool:
+    """Return True if `path` shows an MCP-specific marker (file or text)."""
+    if (path / "mcp.json").exists() or (path / "mcp-config.json").exists():
+        return True
+    return bool(_analyze_path(path))
 
 
 def _analyze_path(path: Path) -> list[str]:
@@ -768,19 +832,34 @@ def _candidate_has_strong_mcp_signal(candidate: Candidate) -> bool:
 
 
 def _should_include_endpoint_candidate(candidate: Candidate, base_dir: Path) -> bool:
+    """Endpoint inclusion gate.
+
+    A bare listening port should not enter the candidate list — every IDE
+    plugin, language server, and dev tool listens on something. We only
+    include endpoints that look MCP-related: tunnel-published, Docker, MCP
+    detected by the probe, MCP keyword in the process command, or a host
+    path that itself shows MCP evidence.
+    """
     if candidate.public_urls:
         return True
     if candidate.source == "docker":
         return True
     if candidate.probe_summary and candidate.probe_summary.get("mcp_detected"):
         return True
-    if candidate.evidence:
+    # Strong signal: the process command itself names mcp/fastmcp/modelcontextprotocol.
+    strong_cmd = {"cmd:mcp", "cmd:fastmcp", "cmd:modelcontextprotocol"}
+    if any(token in strong_cmd for token in candidate.evidence):
         return True
     if candidate.host_path:
         try:
-            return Path(candidate.host_path).resolve().is_relative_to(base_dir)
+            host_path = Path(candidate.host_path).resolve()
         except Exception:
             return False
+        if not _looks_like_user_path(host_path):
+            return False
+        if not host_path.is_relative_to(base_dir):
+            return False
+        return _has_mcp_evidence(host_path)
     return False
 
 
@@ -940,11 +1019,27 @@ def _split_address(address: str) -> tuple[str, int | None]:
 
 
 def _looks_like_user_path(path: Path) -> bool:
-    resolved = str(path.resolve())
-    if resolved == "/":
+    """True only for paths that look like first-party user code.
+
+    Excludes (a) system/package-manager prefixes (/opt, /Applications, etc.),
+    (b) IDE / build caches anywhere in the path (`.windsurf`, `node_modules`,
+    `site-packages`, `__pycache__`, …). The discovery candidate generator and
+    `--auto-all` rely on this gate to avoid scanning third-party installs and
+    re-emitting mcp-guard's own pattern catalog as findings.
+    """
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    resolved_str = str(resolved)
+    if resolved_str == "/":
         return False
-    blocked_prefixes = ("/System", "/usr", "/bin", "/sbin", "/private/var", "/Library/Apple")
-    return not resolved.startswith(blocked_prefixes)
+    if resolved_str.startswith(EXCLUDED_PATH_PREFIXES):
+        return False
+    for part in resolved.parts:
+        if part in EXCLUDED_PATH_NAMES:
+            return False
+    return True
 
 
 def _command_tokens(command: str) -> list[str]:
