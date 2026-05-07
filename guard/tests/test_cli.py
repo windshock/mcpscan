@@ -202,6 +202,119 @@ class CliCiscoIntegrationTests(unittest.TestCase):
         self.assertIn(timeout_note[0], payload["notes"])
 
 
+class CliAutoAllTests(unittest.TestCase):
+    """Verify --auto-all scans every discovered candidate."""
+
+    def _make_args(self, **overrides):
+        defaults = {
+            "path": None,
+            "config": None,
+            "endpoint": None,
+            "auto": False,
+            "auto_all": True,
+            "policy": None,
+            "env": "production",
+            "output": "json",
+            "with_cisco": False,
+            "cisco_analyzers": None,
+            "cisco_timeout": 30,
+        }
+        defaults.update(overrides)
+        return type("Args", (), defaults)()
+
+    def _scan_result(self, target):
+        return {
+            "target": target,
+            "risk": "HIGH",
+            "findings": [
+                {
+                    "pattern_id": "command_exec",
+                    "severity": "CRITICAL",
+                    "matched_indicator": "subprocess.run",
+                    "policy": "BLOCK",
+                    "source": "mcp-guard",
+                }
+            ],
+        }
+
+    def test_auto_all_emits_one_payload_per_candidate(self):
+        candidates = [
+            {"kind": "endpoint", "target": "http://127.0.0.1:3101", "score": 90, "scan_ready": True},
+            {"kind": "endpoint", "target": "http://127.0.0.1:3102", "score": 80, "scan_ready": True},
+            {"kind": "path", "target": "/tmp/x", "score": 70, "scan_ready": True},
+        ]
+
+        def fake_scan(c):
+            return self._scan_result(c["target"])
+
+        evaluation = {
+            "overall_verdict": "BLOCK",
+            "verdicts": [
+                {"pattern": "command_exec", "severity": "CRITICAL", "verdict": "BLOCK", "indicator": "subprocess.run"}
+            ],
+            "recommendations": [],
+        }
+
+        args = self._make_args()
+        with patch("mcp_guard.cli.discover_targets", return_value={"candidates": candidates}), patch(
+            "mcp_guard.cli._scan_discovered_candidate", side_effect=fake_scan
+        ), patch("mcp_guard.cli.target_info.collect", return_value={}), patch(
+            "mcp_guard.cli.PolicyEngine"
+        ) as policy_cls:
+            policy = policy_cls.return_value
+            policy.evaluate.return_value = evaluation
+            policy.format_output.return_value = "Target: x\nRisk: HIGH"
+            buffer = io.StringIO()
+            with redirect_stdout(buffer), self.assertRaises(SystemExit) as exit_ctx:
+                cli._handle_scan(args)
+
+        # All candidates BLOCK -> exit 1
+        self.assertEqual(exit_ctx.exception.code, 1)
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(len(payload["results"]), 3)
+        targets = [r["target"] for r in payload["results"]]
+        self.assertEqual(
+            targets, ["http://127.0.0.1:3101", "http://127.0.0.1:3102", "/tmp/x"]
+        )
+        for r in payload["results"]:
+            self.assertEqual(r["policy_verdict"], "BLOCK")
+            self.assertEqual(r["findings"], ["command_exec"])
+
+    def test_auto_all_continues_past_per_candidate_errors(self):
+        candidates = [
+            {"kind": "endpoint", "target": "http://x:1", "score": 90, "scan_ready": True},
+            {"kind": "endpoint", "target": "http://x:2", "score": 80, "scan_ready": True},
+        ]
+
+        def fake_scan(c):
+            if c["target"] == "http://x:2":
+                return {"error": "boom"}
+            return self._scan_result(c["target"])
+
+        args = self._make_args()
+        with patch("mcp_guard.cli.discover_targets", return_value={"candidates": candidates}), patch(
+            "mcp_guard.cli._scan_discovered_candidate", side_effect=fake_scan
+        ), patch("mcp_guard.cli.target_info.collect", return_value={}), patch(
+            "mcp_guard.cli.PolicyEngine"
+        ) as policy_cls:
+            policy = policy_cls.return_value
+            policy.evaluate.return_value = {
+                "overall_verdict": "ALLOW",
+                "verdicts": [],
+                "recommendations": [],
+            }
+            policy.format_output.return_value = "Target: x"
+            buffer = io.StringIO()
+            with redirect_stdout(buffer):
+                # No BLOCK and no exception -> normal exit (no sys.exit call)
+                cli._handle_scan(args)
+
+        payload = json.loads(buffer.getvalue())
+        self.assertEqual(len(payload["results"]), 2)
+        self.assertNotIn("error", payload["results"][0])
+        self.assertEqual(payload["results"][1]["error"], "boom")
+
+
 class PolicyCiscoVerdictTests(unittest.TestCase):
     def test_cisco_high_finding_forces_block_in_development(self):
         from mcp_guard.policy import PolicyEngine

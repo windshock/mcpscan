@@ -60,6 +60,11 @@ Verbose mode (`-v` INFO, `-vv` DEBUG) emits scan progress, hidden-probe URLs+sta
 
 Each scan also emits a `Target details` block identifying *what* was scanned: for `--endpoint`, the listening process (PID + command via `lsof`) and Docker container (name, image, compose service, working_dir) when applicable; for `--path`, the resolved absolute path, file count by extension, and git remote+commit; for `--config`, the file path or inline-JSON marker plus a preview of declared `mcpServers`.
 
+Bulk modes:
+
+- `--auto` runs `discover` and scans the highest-ranked candidate.
+- `--auto-all` scans **every** discovered candidate (one section per target). Exit code is 1 if any target evaluates to BLOCK.
+
 ## Install
 
 There are three ways to use this repo, in increasing order of involvement:

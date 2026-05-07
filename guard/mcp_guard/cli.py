@@ -61,6 +61,11 @@ def main():
     scan_parser.add_argument("--config", "-c", help="Path or string of MCP config JSON")
     scan_parser.add_argument("--endpoint", "-e", help="MCP server endpoint URL")
     scan_parser.add_argument("--auto", action="store_true", help="Auto-select the highest-ranked discovered target")
+    scan_parser.add_argument(
+        "--auto-all",
+        action="store_true",
+        help="Scan every discovered MCP candidate and emit one report per target.",
+    )
     scan_parser.add_argument("--policy", help="Path to custom policy YAML file")
     scan_parser.add_argument("--env", default="production", choices=["production", "development"], help="Target environment")
     scan_parser.add_argument("--output", "-o", choices=["text", "json"], default="text", help="Output format")
@@ -112,6 +117,11 @@ _logger = logging.getLogger("mcp_guard.cli")
 
 def _handle_scan(args):
     policy_engine = PolicyEngine(args.policy)
+
+    if getattr(args, "auto_all", False):
+        _handle_auto_all(args, policy_engine)
+        return
+
     target_kind = "discovered"
     target_value = None
 
@@ -233,6 +243,126 @@ def _handle_scan(args):
 
     # Exit code: 1 if BLOCK, 0 otherwise
     if evaluation["overall_verdict"] == "BLOCK":
+        sys.exit(1)
+
+
+def _handle_auto_all(args, policy_engine):
+    """Scan every discovered candidate and emit one report per target.
+
+    Per-candidate failures (unreachable endpoint, unsupported kind) become
+    failure entries but do not abort the loop. Exit code is 1 if any target
+    evaluates to BLOCK; 0 otherwise.
+    """
+    try:
+        discovery = discover_targets()
+    except RuntimeError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+    candidates = discovery.get("candidates", [])
+    if not candidates:
+        docker_error = discovery.get("docker_error")
+        if docker_error:
+            print(f"Error: no MCP targets discovered ({docker_error})", file=sys.stderr)
+        else:
+            print("Error: no MCP targets discovered", file=sys.stderr)
+        sys.exit(1)
+
+    _logger.info("--auto-all: scanning %d candidate(s)", len(candidates))
+    json_results: list[dict] = []
+    text_blocks: list[str] = []
+    any_block = False
+
+    for idx, candidate in enumerate(candidates, start=1):
+        kind = candidate.get("kind") or "discovered"
+        target_value = candidate.get("target")
+        _logger.info("[%d/%d] %s %s", idx, len(candidates), kind, target_value)
+
+        scan_result = _scan_discovered_candidate(candidate)
+        if "error" in scan_result:
+            entry = {
+                "target": target_value,
+                "kind": kind,
+                "error": scan_result["error"],
+            }
+            json_results.append(entry)
+            text_blocks.append(
+                f"Target: {target_value}\n  kind: {kind}\n  error: {scan_result['error']}"
+            )
+            continue
+
+        cisco_notes: list[str] = []
+        if getattr(args, "with_cisco", False):
+            cisco_notes = _merge_cisco_findings(scan_result, kind, target_value, args)
+
+        target_metadata = target_info.collect(kind, target_value)
+        if target_metadata:
+            scan_result["target_metadata"] = target_metadata
+
+        evaluation = policy_engine.evaluate(scan_result, environment=args.env)
+        if evaluation["overall_verdict"] == "BLOCK":
+            any_block = True
+
+        # Build JSON-shaped payload (mirrors single-target output).
+        provenance: dict[str, list[str]] = {}
+        normalized_findings: list[str] = []
+        for f in scan_result.get("findings", []):
+            pid = f.get("pattern_id", f.get("pattern_name", "unknown"))
+            normalized_findings.append(pid)
+            sources = provenance.setdefault(pid, [])
+            src = f.get("source") or "mcp-guard"
+            if src not in sources:
+                sources.append(src)
+        for sources in provenance.values():
+            sources.sort()
+
+        payload: dict = {
+            "target": scan_result["target"],
+            "kind": kind,
+            "risk": scan_result["risk"],
+            "policy_verdict": evaluation["overall_verdict"],
+            "environment": args.env,
+            "findings": normalized_findings,
+            "provenance": provenance,
+            "verdicts": evaluation["verdicts"],
+            "recommendations": evaluation["recommendations"],
+        }
+        if target_metadata:
+            payload["target_metadata"] = target_metadata
+        notes = list(scan_result.get("notes") or []) + cisco_notes
+        if notes:
+            payload["notes"] = notes
+        if scan_result.get("probe_summary"):
+            payload["probe_summary"] = scan_result["probe_summary"]
+        json_results.append(payload)
+
+        # Build text block for this target.
+        text = policy_engine.format_output(evaluation)
+        if target_metadata:
+            metadata_lines = target_info.render_text(target_metadata)
+            lines = text.split("\n")
+            insert_at = 1 if lines and lines[0].startswith("Target:") else 0
+            lines = (
+                lines[:insert_at]
+                + ["Target details:"]
+                + metadata_lines
+                + lines[insert_at:]
+            )
+            text = "\n".join(lines)
+        if notes:
+            text += "\n\nNotes:\n" + "\n".join(f"  - {n}" for n in notes)
+        text_blocks.append(text)
+
+    if args.output == "json":
+        print(json.dumps({"results": json_results}, indent=2))
+    else:
+        sep = "\n" + "=" * 72 + "\n"
+        for idx, block in enumerate(text_blocks, start=1):
+            if idx > 1:
+                print(sep)
+            print(f"[{idx}/{len(text_blocks)}]")
+            print(block)
+
+    if any_block:
         sys.exit(1)
 
 

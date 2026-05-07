@@ -28,7 +28,15 @@ mcp-guard scan --endpoint http://localhost:3000/sse
 
 # Combine with cisco for both threat models
 mcp-guard scan --config ./mcp.json --with-cisco
+
+# Auto-discover and scan a single best candidate (highest-ranked)
+mcp-guard scan --auto
+
+# Auto-discover and scan ALL candidates (one report per target)
+mcp-guard scan --auto-all
 ```
+
+`--auto-all` walks every listening port + known MCP project marker, scans each, and emits one section per target. Exit code is 1 if any target evaluates to BLOCK. Wall-clock cost grows with the number of listening services on your host (each non-MCP port costs roughly 8–15 s in connection timeouts), so prefer `--auto` or an explicit `--endpoint` for tight CI loops.
 
 JSON output (`--output json`) tags each finding with `source` (`mcp-guard`, `cisco-yara`, `cisco-behavioral`, `cisco-llm`) and emits a `provenance` map keyed by pattern id.
 
