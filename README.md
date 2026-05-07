@@ -2,6 +2,12 @@
 
 Docker-based evaluation lab for MCP security scanners, plus a policy-based guardrail tool (`mcp-guard`).
 
+<p align="center">
+  <img src="demo/mcp-guard-4x5.gif" alt="mcp-guard scan demo: capability audit on a running Docker MCP, then a supply-chain config check" width="540"/>
+</p>
+
+The clip walks through `mcp-guard scan --endpoint <local-mcp>` (capability audit including the Docker container that's behind the port) and `mcp-guard scan --config <attack.json>` (supply-chain check). Source `.tape` and longer cuts live in [`demo/`](demo/).
+
 ## Background
 
 MCP security is not just about prompt injection.
