@@ -1,7 +1,7 @@
 {
   "target": "vuln-network",
   "scanner_name": "mcp-guard-endpoint",
-  "timestamp": "2026-05-04T05:20:19.005353+00:00",
+  "timestamp": "2026-05-04T05:24:22.406863+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [

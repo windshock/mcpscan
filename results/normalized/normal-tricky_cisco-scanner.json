@@ -1,7 +1,7 @@
 {
   "target": "normal-tricky",
   "scanner_name": "cisco-scanner",
-  "timestamp": "2026-05-04T05:20:18.997993+00:00",
+  "timestamp": "2026-05-04T05:24:22.391790+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [],

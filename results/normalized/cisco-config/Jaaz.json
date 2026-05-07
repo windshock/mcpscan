@@ -1,7 +1,7 @@
 {
   "target": "Jaaz",
   "scanner_name": "cisco-config",
-  "timestamp": "2026-05-04T05:20:19.014547+00:00",
+  "timestamp": "2026-05-04T05:24:22.423254+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [

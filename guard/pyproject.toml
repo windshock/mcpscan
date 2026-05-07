@@ -6,14 +6,44 @@ build-backend = "setuptools.build_meta"
 name = "mcp-guard"
 version = "0.1.0"
 description = "Policy-based security guardrail for MCP integrations"
-requires-python = ">=3.9"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "windshock"}]
+keywords = ["mcp", "security", "guardrail", "scanner", "ai-supply-chain"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = [
     "mcp[cli]>=1.6.0",
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+cisco = ["cisco-ai-mcp-scanner>=4.6"]
+
 [project.scripts]
 mcp-guard = "mcp_guard.cli:main"
 
+[project.urls]
+Homepage = "https://github.com/windshock/mcpscan"
+Issues = "https://github.com/windshock/mcpscan/issues"
+Source = "https://github.com/windshock/mcpscan/tree/main/guard"
+
 [tool.setuptools.packages.find]
 include = ["mcp_guard*"]
+
+[tool.setuptools.package-data]
+mcp_guard = ["mcp-policy.yaml"]

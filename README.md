@@ -56,7 +56,39 @@ Cisco analyzer selection:
 
 Each finding in the JSON output carries a `source` field (`mcp-guard`, `cisco-yara`, `cisco-behavioral`, `cisco-llm`) plus a per-pattern `provenance` map. The PolicyEngine escalates any `HIGH`/`CRITICAL` cisco finding to `BLOCK` regardless of `--env`.
 
-## Quick Start
+## Install
+
+There are three ways to use this repo, in increasing order of involvement:
+
+### 1. Pip wheel (fastest, recommended for the CLI)
+
+```bash
+# Latest tagged release wheel
+pip install https://github.com/windshock/mcpscan/releases/latest/download/mcp_guard-0.1.0-py3-none-any.whl
+
+# With cisco supply-chain detection (yara offline; behavioral/llm need MCP_SCANNER_LLM_API_KEY)
+pip install 'https://github.com/windshock/mcpscan/releases/latest/download/mcp_guard-0.1.0-py3-none-any.whl[cisco]'
+
+mcp-guard scan --path ./your-mcp-server
+mcp-guard scan --config ./mcp.json --with-cisco
+mcp-guard scan --endpoint http://localhost:3000/sse
+```
+
+Requires Python ≥ 3.10.
+
+### 2. Distribution Docker image (zero Python setup)
+
+```bash
+docker run --rm -v "$PWD:/scan" \
+  ghcr.io/windshock/mcp-guard:latest \
+  scan --path /scan/your-mcp-server
+```
+
+The image at `ghcr.io/windshock/mcp-guard` ships with cisco-mcp-scanner preinstalled (~360 MiB). Set `MCP_SCANNER_LLM_API_KEY` to enable cisco's behavioral/llm analyzers.
+
+### 3. Full lab benchmark (this repo)
+
+For evaluating multiple scanners side by side on the 11-server vulnerability lab — the workflow this repo was built around.
 
 ```bash
 # Start the lab in the background
@@ -71,7 +103,7 @@ python3 runner/run_ox_live.py
 # Or run OX live validation from the isolated Docker profile
 docker compose --profile ox-live run --rm ox-live-runner
 
-# Run mcp-guard standalone
+# Run mcp-guard standalone (lab image, editable install)
 docker compose run --rm mcp-guard scan --path /servers/vuln-exec
 
 # Open MCP Inspector

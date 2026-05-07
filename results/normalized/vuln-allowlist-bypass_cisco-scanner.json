@@ -1,7 +1,7 @@
 {
   "target": "vuln-allowlist-bypass",
   "scanner_name": "cisco-scanner",
-  "timestamp": "2026-05-04T05:20:18.998223+00:00",
+  "timestamp": "2026-05-04T05:24:22.392272+00:00",
   "status": "failed",
   "error": "cisco-scanner produced invalid JSON output",
   "expected_findings": [

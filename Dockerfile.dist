@@ -1,0 +1,27 @@
+# Distribution image for mcp-guard.
+#
+# Built from the wheel produced by `python -m build guard/`. Cisco's
+# mcp-ai-scanner is installed via the [cisco] extra so `--with-cisco` works
+# out of the box. Lab benchmark uses guard/Dockerfile (separate, editable
+# install) — keep these two images distinct.
+
+FROM python:3.12-slim
+
+ARG WHEEL=mcp_guard-0.1.0-py3-none-any.whl
+
+LABEL org.opencontainers.image.title="mcp-guard"
+LABEL org.opencontainers.image.description="Policy-based MCP security guardrail with optional cisco-mcp-scanner integration"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.source="https://github.com/windshock/mcpscan"
+
+# yara-python (cisco's offline analyzer) needs libyara at build time on some
+# linux/arch combos; the wheel covers x86_64/arm64 macOS+linux. If pip falls
+# back to source it'll need build-essential — keeping the image slim by trusting
+# wheels for now.
+
+COPY guard/dist/${WHEEL} /tmp/${WHEEL}
+RUN pip install --no-cache-dir "/tmp/${WHEEL}[cisco]" && rm -f /tmp/${WHEEL}
+
+WORKDIR /scan
+ENTRYPOINT ["mcp-guard"]
+CMD ["--help"]

@@ -61,7 +61,7 @@
           "content-type": "application/json; charset=utf-8",
           "content-length": "39",
           "etag": "W/\"27-MLKzYPsp4CHuQR5xQ3B1pp5MPq4\"",
-          "date": "Mon, 04 May 2026 05:12:36 GMT",
+          "date": "Mon, 04 May 2026 05:22:56 GMT",
           "connection": "close"
         },
         "body_excerpt": "{\"status\":\"ok\",\"server\":\"vuln-network\"}"
@@ -80,7 +80,7 @@
           "x-content-type-options": "nosniff",
           "content-type": "text/html; charset=utf-8",
           "content-length": "139",
-          "date": "Mon, 04 May 2026 05:12:36 GMT",
+          "date": "Mon, 04 May 2026 05:22:56 GMT",
           "connection": "close"
         },
         "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
@@ -99,7 +99,7 @@
           "x-content-type-options": "nosniff",
           "content-type": "text/html; charset=utf-8",
           "content-length": "147",
-          "date": "Mon, 04 May 2026 05:12:36 GMT",
+          "date": "Mon, 04 May 2026 05:22:56 GMT",
           "connection": "close"
         },
         "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /messages</pre>\n</body>\n</html>\n"
@@ -120,7 +120,7 @@
           "x-content-type-options": "nosniff",
           "content-type": "text/html; charset=utf-8",
           "content-length": "153",
-          "date": "Mon, 04 May 2026 05:12:36 GMT",
+          "date": "Mon, 04 May 2026 05:22:56 GMT",
           "connection": "close"
         },
         "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /api/connectors</pre>\n</body>\n</html>\n"
@@ -139,7 +139,7 @@
           "x-content-type-options": "nosniff",
           "content-type": "text/html; charset=utf-8",
           "content-length": "153",
-          "date": "Mon, 04 May 2026 05:12:36 GMT",
+          "date": "Mon, 04 May 2026 05:22:56 GMT",
           "connection": "close"
         },
         "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot POST /api/transport</pre>\n</body>\n</html>\n"
@@ -158,7 +158,7 @@
           "x-content-type-options": "nosniff",
           "content-type": "text/html; charset=utf-8",
           "content-length": "149",
-          "date": "Mon, 04 May 2026 05:12:36 GMT",
+          "date": "Mon, 04 May 2026 05:22:56 GMT",
           "connection": "close"
         },
         "body_excerpt": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot PUT /api/config</pre>\n</body>\n</html>\n"

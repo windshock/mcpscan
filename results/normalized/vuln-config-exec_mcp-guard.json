@@ -1,7 +1,7 @@
 {
   "target": "vuln-config-exec",
   "scanner_name": "mcp-guard",
-  "timestamp": "2026-05-04T05:20:19.001393+00:00",
+  "timestamp": "2026-05-04T05:24:22.398758+00:00",
   "status": "success",
   "error": null,
   "expected_findings": [

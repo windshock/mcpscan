@@ -6,6 +6,10 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 .eggs/
+build/
+dist/
+*.whl
+*.tar.gz
 
 # Local environment
 .env

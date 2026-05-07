@@ -1,6 +1,6 @@
 # Cisco Supply-Chain Coverage (config mode against OX research corpus)
 
-Generated: 2026-05-04T05:20:19.015578+00:00
+Generated: 2026-05-04T05:24:22.443025+00:00
 
 - **Cases scanned**: 14 (14 succeeded)
 - **True Positives**: 0
