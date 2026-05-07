@@ -8,10 +8,10 @@ Optionally fuses with [cisco-ai-mcp-scanner](https://github.com/cisco-ai-defense
 
 ```bash
 # Wheel from latest GitHub release
-pip install https://github.com/windshock/mcpscan/releases/download/v0.1.0/mcp_guard-0.1.0-py3-none-any.whl
+pip install https://github.com/windshock/mcpscan/releases/download/v0.2.0/mcp_guard-0.2.0-py3-none-any.whl
 
 # With cisco supply-chain detection
-pip install 'https://github.com/windshock/mcpscan/releases/download/v0.1.0/mcp_guard-0.1.0-py3-none-any.whl[cisco]'
+pip install 'https://github.com/windshock/mcpscan/releases/download/v0.2.0/mcp_guard-0.2.0-py3-none-any.whl[cisco]'
 ```
 
 ## Quickstart
