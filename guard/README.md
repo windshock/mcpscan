@@ -42,6 +42,14 @@ mcp-guard -q scan --path .          # ERROR only
 
 Logs go to stderr so `--output json` on stdout stays pipeable.
 
+Each scan also emits a `Target details` block in both text and JSON output that identifies *what* was scanned:
+
+- `--endpoint`: listening process (PID + command via `lsof`) and Docker container info (name, image, compose project/service/working_dir) when the target is a Docker-mapped port.
+- `--path`: resolved absolute path, file count by extension, total bytes, git remote + commit + dirty flag.
+- `--config`: file path or `inline_json` marker, plus a preview of declared `mcpServers` (name, command, transport).
+
+All collectors are best-effort: missing `lsof` / `docker` / `git` quietly skip without breaking the scan.
+
 ## Threat models
 
 `mcp-guard` and `cisco-ai-mcp-scanner` are complementary, not redundant:

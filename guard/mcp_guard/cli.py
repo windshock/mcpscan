@@ -4,6 +4,7 @@ import json
 import logging
 import sys
 
+from . import target_info
 from .discovery import (
     discover_targets,
     format_discovery_text,
@@ -169,6 +170,11 @@ def _handle_scan(args):
     if getattr(args, "with_cisco", False):
         cisco_notes = _merge_cisco_findings(scan_result, target_kind, target_value, args)
 
+    target_metadata = target_info.collect(target_kind, target_value)
+    if target_metadata:
+        scan_result["target_metadata"] = target_metadata
+        _logger.debug("target metadata: %s", target_metadata)
+
     evaluation = policy_engine.evaluate(scan_result, environment=args.env)
 
     if args.output == "json":
@@ -196,13 +202,28 @@ def _handle_scan(args):
             "verdicts": evaluation["verdicts"],
             "recommendations": evaluation["recommendations"],
         }
+        if target_metadata:
+            output["target_metadata"] = target_metadata
         if scan_result.get("notes") or cisco_notes:
             output["notes"] = list(scan_result.get("notes") or []) + cisco_notes
         if scan_result.get("probe_summary"):
             output["probe_summary"] = scan_result["probe_summary"]
         print(json.dumps(output, indent=2))
     else:
-        print(policy_engine.format_output(evaluation))
+        formatted = policy_engine.format_output(evaluation)
+        if target_metadata:
+            metadata_lines = target_info.render_text(target_metadata)
+            # Inject the "Target details" block right after the "Target:" line.
+            lines = formatted.split("\n")
+            insert_at = 1 if lines and lines[0].startswith("Target:") else 0
+            lines = (
+                lines[:insert_at]
+                + ["Target details:"]
+                + metadata_lines
+                + lines[insert_at:]
+            )
+            formatted = "\n".join(lines)
+        print(formatted)
         notes = list(scan_result.get("notes") or []) + cisco_notes
         if notes:
             print("")

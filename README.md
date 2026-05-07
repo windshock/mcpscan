@@ -58,6 +58,8 @@ Each finding in the JSON output carries a `source` field (`mcp-guard`, `cisco-ya
 
 Verbose mode (`-v` INFO, `-vv` DEBUG) emits scan progress, hidden-probe URLs+statuses, cisco subprocess invocations, and suppression decisions (e.g. `suppressing command_exec/env_exposure: runtime-only family fired`). Logs go to stderr so `--output json` stays pipeable.
 
+Each scan also emits a `Target details` block identifying *what* was scanned: for `--endpoint`, the listening process (PID + command via `lsof`) and Docker container (name, image, compose service, working_dir) when applicable; for `--path`, the resolved absolute path, file count by extension, and git remote+commit; for `--config`, the file path or inline-JSON marker plus a preview of declared `mcpServers`.
+
 ## Install
 
 There are three ways to use this repo, in increasing order of involvement:
