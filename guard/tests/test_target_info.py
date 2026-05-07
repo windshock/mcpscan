@@ -108,6 +108,48 @@ class EndpointMetadataTests(unittest.TestCase):
         self.assertEqual(info["port"], 8080)
         self.assertEqual(info["scope"], "private")
 
+    def test_collect_endpoint_links_public_tunnels_to_local_port(self):
+        """If a tunnel container forwards to this local port, scan output
+        should surface the public URL alongside vulnerability findings."""
+        fake_tunnels = [
+            {
+                "provider": "cloudflared",
+                "public_url": "https://abc.trycloudflare.com",
+                "upstream": "http://127.0.0.1:3102",
+                "container": "mcp-lab-cloudflared-tunnel-1",
+            },
+            # Different port → must NOT be attached
+            {
+                "provider": "localtunnel",
+                "public_url": "https://xyz.loca.lt",
+                "upstream": "http://127.0.0.1:9999",
+                "container": "other",
+            },
+        ]
+        with patch("mcp_guard.target_info._resolve_listener", return_value=None), patch(
+            "mcp_guard.target_info._resolve_docker_container", return_value=None
+        ), patch(
+            "mcp_guard.discovery._discover_docker_tunnel_links",
+            return_value=fake_tunnels,
+        ):
+            info = target_info.collect("endpoint", "http://127.0.0.1:3102/sse")
+        self.assertEqual(len(info["public_tunnels"]), 1)
+        self.assertEqual(info["public_tunnels"][0]["provider"], "cloudflared")
+        self.assertEqual(
+            info["public_tunnels"][0]["public_url"], "https://abc.trycloudflare.com"
+        )
+
+    def test_collect_endpoint_skips_tunnel_lookup_for_remote_targets(self):
+        """Tunnel detection only meaningful for local-published ports."""
+        with patch("mcp_guard.target_info._resolve_listener", return_value=None), patch(
+            "mcp_guard.target_info._resolve_docker_container", return_value=None
+        ), patch(
+            "mcp_guard.discovery._discover_docker_tunnel_links",
+            side_effect=AssertionError("should not be called for remote host"),
+        ):
+            info = target_info.collect("endpoint", "https://api.example.com/sse")
+        self.assertNotIn("public_tunnels", info)
+
 
 class PathMetadataTests(unittest.TestCase):
     def test_directory_summary_counts_extensions(self):

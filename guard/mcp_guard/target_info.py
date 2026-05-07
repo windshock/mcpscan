@@ -67,7 +67,49 @@ def _endpoint_metadata(url: str) -> dict[str, Any]:
     if docker_info:
         info["docker"] = docker_info
 
+    tunnels = _resolve_public_tunnels(host, port)
+    if tunnels:
+        info["public_tunnels"] = tunnels
+
     return info
+
+
+def _resolve_public_tunnels(host: str, port: int) -> list[dict[str, str]]:
+    """Find any tunnel container that forwards to this local host:port.
+
+    When the user scans a local MCP endpoint, target_metadata should
+    surface "this is also exposed publicly via X" so the scan output
+    captures the supply-chain risk, not just the local capability gap.
+
+    Best-effort: silently returns [] when docker is missing or no tunnel
+    container points at this port.
+    """
+    if host not in {"127.0.0.1", "localhost", "::1", ""}:
+        # Tunnel detection only meaningful for local-published ports.
+        return []
+    try:
+        from . import discovery
+    except Exception:  # pragma: no cover - import guard
+        return []
+    try:
+        links = discovery._discover_docker_tunnel_links()
+    except Exception as exc:  # pragma: no cover
+        _logger.debug("public tunnel discovery failed: %s", exc)
+        return []
+
+    target_upstream = f"127.0.0.1:{port}"
+    matches: list[dict[str, str]] = []
+    for link in links:
+        upstream = link.get("upstream") or ""
+        if target_upstream in upstream:
+            matches.append(
+                {
+                    "provider": link.get("provider", ""),
+                    "public_url": link.get("public_url", ""),
+                    "container": link.get("container", ""),
+                }
+            )
+    return matches
 
 
 def _classify_host(host: str) -> str:
