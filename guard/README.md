@@ -32,6 +32,16 @@ mcp-guard scan --config ./mcp.json --with-cisco
 
 JSON output (`--output json`) tags each finding with `source` (`mcp-guard`, `cisco-yara`, `cisco-behavioral`, `cisco-llm`) and emits a `provenance` map keyed by pattern id.
 
+Verbose logging:
+
+```bash
+mcp-guard -v scan --path .          # INFO: scan progress + verdict summary
+mcp-guard -vv scan --path .         # DEBUG: per-file reads + suppression decisions
+mcp-guard -q scan --path .          # ERROR only
+```
+
+Logs go to stderr so `--output json` on stdout stays pipeable.
+
 ## Threat models
 
 `mcp-guard` and `cisco-ai-mcp-scanner` are complementary, not redundant:

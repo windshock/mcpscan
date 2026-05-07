@@ -1,7 +1,10 @@
 """MCP Security Pattern Catalog — the knowledge base for vulnerability detection."""
 from __future__ import annotations
 
+import logging
 import re
+
+_logger = logging.getLogger("mcp_guard.patterns")
 
 PATTERNS = {
     "command_exec": {
@@ -603,6 +606,13 @@ def find_matching_patterns(code: str, tool_descriptions: list[str] = None) -> li
     remote_config = _detect_remote_config_loading(code)
     matches.extend(remote_config)
     has_remote_config = bool(remote_config)
+
+    if has_runtime:
+        _logger.debug("suppressing command_exec/env_exposure: runtime-only family fired")
+    if has_allowlist:
+        _logger.debug("suppressing command_exec: allowlist_bypass fired")
+    if has_remote_config:
+        _logger.debug("suppressing ssrf: remote_config_loading fired")
 
     matches.extend(_detect_command_exec(code, suppress=has_runtime or has_allowlist))
     matches.extend(_detect_unrestricted_file_read(code))

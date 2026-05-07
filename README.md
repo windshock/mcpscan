@@ -56,6 +56,8 @@ Cisco analyzer selection:
 
 Each finding in the JSON output carries a `source` field (`mcp-guard`, `cisco-yara`, `cisco-behavioral`, `cisco-llm`) plus a per-pattern `provenance` map. The PolicyEngine escalates any `HIGH`/`CRITICAL` cisco finding to `BLOCK` regardless of `--env`.
 
+Verbose mode (`-v` INFO, `-vv` DEBUG) emits scan progress, hidden-probe URLs+statuses, cisco subprocess invocations, and suppression decisions (e.g. `suppressing command_exec/env_exposure: runtime-only family fired`). Logs go to stderr so `--output json` stays pipeable.
+
 ## Install
 
 There are three ways to use this repo, in increasing order of involvement:

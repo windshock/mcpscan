@@ -1,6 +1,7 @@
 """MCP Guard CLI — command-line interface for MCP security guardrail."""
 import argparse
 import json
+import logging
 import sys
 
 from .discovery import (
@@ -12,10 +13,44 @@ from .policy import PolicyEngine
 from .scanner import scan_config, scan_endpoint, scan_path
 
 
+def _configure_logging(verbose: int, quiet: bool) -> None:
+    """Map -v / -vv / --quiet flags to Python logging levels.
+
+    Default: WARNING (only warnings + errors).
+    -v: INFO (scan progress + key decisions).
+    -vv: DEBUG (per-probe / per-pattern detail).
+    --quiet: ERROR only.
+    """
+    if quiet:
+        level = logging.ERROR
+    elif verbose >= 2:
+        level = logging.DEBUG
+    elif verbose == 1:
+        level = logging.INFO
+    else:
+        level = logging.WARNING
+    logging.basicConfig(
+        level=level,
+        format="%(name)s: %(message)s",
+        stream=sys.stderr,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="mcp-guard",
         description="MCP Security Guardrail — scan MCP servers and configs for security issues",
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="count",
+        default=0,
+        help="Increase log verbosity. -v shows scan progress (INFO); -vv shows per-probe / per-pattern detail (DEBUG).",
+    )
+    parser.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Suppress non-error logging (overrides -v).",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -57,6 +92,7 @@ def main():
     catalog_parser.add_argument("--pattern", help="Show details for a specific pattern ID")
 
     args = parser.parse_args()
+    _configure_logging(getattr(args, "verbose", 0), getattr(args, "quiet", False))
 
     if args.command == "scan":
         _handle_scan(args)
@@ -70,12 +106,16 @@ def main():
         parser.print_help()
 
 
+_logger = logging.getLogger("mcp_guard.cli")
+
+
 def _handle_scan(args):
     policy_engine = PolicyEngine(args.policy)
     target_kind = "discovered"
     target_value = None
 
     if args.path:
+        _logger.info("scanning path: %s", args.path)
         scan_result = scan_path(args.path)
         target_kind = "path"
         target_value = args.path
@@ -89,10 +129,12 @@ def _handle_scan(args):
                     config_str = f.read()
             except FileNotFoundError:
                 pass
+        _logger.info("scanning config (%d bytes)", len(config_str))
         scan_result = scan_config(config_str)
         target_kind = "config"
         target_value = config_str
     elif args.endpoint:
+        _logger.info("scanning endpoint: %s", args.endpoint)
         scan_result = scan_endpoint(args.endpoint)
         target_kind = "endpoint"
         target_value = args.endpoint

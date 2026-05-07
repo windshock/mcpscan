@@ -188,6 +188,40 @@ class LocalAdminServerCase(unittest.TestCase):
         self.assertIn("provenance", payload)
         self.assertIn("hidden_transport", payload["provenance"])
 
+    def test_cli_verbose_mode_emits_progress_logs(self):
+        """-v should emit INFO logs to stderr while keeping stdout JSON valid."""
+        cmd = [
+            sys.executable,
+            "-m",
+            "mcp_guard",
+            "-v",
+            "scan",
+            "--endpoint",
+            self.base_url,
+            "--output",
+            "json",
+        ]
+        env = {
+            "PYTHONPATH": str(REPO_ROOT / "guard") + ":" + str(REPO_ROOT),
+            "PATH": _safe_path_env(),
+        }
+        completed = subprocess.run(
+            cmd,
+            cwd=REPO_ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        # stdout should still be valid JSON (logs go to stderr).
+        payload = json.loads(completed.stdout)
+        self.assertIn("findings", payload)
+        # stderr should contain the cli's "scanning endpoint" INFO line.
+        self.assertIn("mcp_guard.cli: scanning endpoint", completed.stderr)
+        # And the policy summary INFO line.
+        self.assertIn("mcp_guard.policy:", completed.stderr)
+
     def test_cli_with_cisco_flag_warns_when_binary_missing(self):
         """--with-cisco should never hard-fail when mcp-scanner isn't on PATH."""
         import shutil as _shutil

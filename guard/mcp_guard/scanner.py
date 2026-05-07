@@ -18,32 +18,49 @@ from .patterns import PATTERNS, find_matching_patterns
 logging.getLogger("mcp.client.sse").setLevel(logging.CRITICAL)
 logging.getLogger("httpx_sse").setLevel(logging.CRITICAL)
 
+_logger = logging.getLogger("mcp_guard.scanner")
+
 
 def scan_path(path: str) -> dict:
     """Scan a local directory or file for MCP vulnerability patterns."""
     target = Path(path)
 
     if target.is_file():
+        _logger.debug("reading single file: %s", target)
         code = target.read_text(errors="ignore")
         tool_descriptions = _extract_tool_descriptions(code)
+        _logger.info("scan_path file: %d bytes, %d tool descriptions", len(code), len(tool_descriptions))
         matches = find_matching_patterns(code, tool_descriptions)
+        _logger.info("scan_path file: %d matches", len(matches))
         return _build_result(str(target), matches, code)
 
     if target.is_dir():
         all_code = ""
         all_tool_descriptions = []
+        files_read = 0
         for f in target.rglob("*"):
             if f.suffix in (".py", ".ts", ".js", ".json", ".yaml", ".yml", ".toml"):
                 try:
                     code = f.read_text(errors="ignore")
                     all_code += f"\n# --- {f.relative_to(target)} ---\n{code}"
                     all_tool_descriptions.extend(_extract_tool_descriptions(code))
-                except Exception:
+                    files_read += 1
+                    _logger.debug("read %s (%d bytes)", f.relative_to(target), len(code))
+                except Exception as exc:
+                    _logger.debug("skipped %s: %s", f, exc)
                     continue
 
+        _logger.info(
+            "scan_path dir: %d files, %d total bytes, %d tool descriptions",
+            files_read,
+            len(all_code),
+            len(all_tool_descriptions),
+        )
         matches = find_matching_patterns(all_code, all_tool_descriptions)
+        _logger.info("scan_path dir: %d matches", len(matches))
         return _build_result(str(target), matches, all_code)
 
+    _logger.warning("scan_path: target does not exist: %s", path)
     return {"error": f"Path not found: {path}"}
 
 
@@ -116,6 +133,7 @@ def probe_endpoint(endpoint_url: str) -> dict:
         "error": None,
     }
 
+    _logger.debug("probe_endpoint: SSE listing at %s", sse_url)
     try:
         tools = asyncio.run(_list_tools_via_sse(sse_url))
         summary["reachable"] = True
@@ -126,6 +144,8 @@ def probe_endpoint(endpoint_url: str) -> dict:
         summary["tool_count"] = len(tools)
         summary["tool_names"] = [tool.get("name", "") for tool in tools]
         summary["checks"].append({"url": sse_url, "kind": "mcp_sse", "status": 200})
+        _logger.info("probe_endpoint: SSE listing OK, %d tools: %s",
+                     len(tools), summary["tool_names"])
     except Exception as exc:
         summary["error"] = str(exc)
         summary["checks"].append(
@@ -136,6 +156,7 @@ def probe_endpoint(endpoint_url: str) -> dict:
                 "error": str(exc),
             }
         )
+        _logger.info("probe_endpoint: SSE listing failed: %s", str(exc)[:120])
 
     for path in ("/health", "/", "/messages"):
         check = _http_probe(urljoin(base_url, path.lstrip("/")))
@@ -168,6 +189,10 @@ def probe_endpoint(endpoint_url: str) -> dict:
         )
         summary["hidden_probes"].append(probe)
         status = probe.get("status")
+        _logger.debug(
+            "hidden probe %s %s -> status=%s",
+            spec["method"], spec["path"], status,
+        )
         if status is not None and status != 404:
             summary["markers"].append(f"hidden:{spec['path']}")
             if status and 200 <= status < 500:

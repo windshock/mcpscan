@@ -13,12 +13,15 @@ caller can degrade gracefully and surface the reason in the CLI output.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 from typing import Iterable
+
+_logger = logging.getLogger("mcp_guard.cisco_bridge")
 
 # Severities Cisco emits per analyzer; map to mcp-guard severity strings.
 _CISCO_SEVERITIES = {"HIGH", "CRITICAL", "MEDIUM", "LOW", "INFO"}
@@ -263,22 +266,35 @@ def scan_endpoint(
 
 def _run_and_parse(args: list[str], *, timeout: int, env: dict[str, str] | None, label: str) -> dict:
     notes: list[str] = []
+    _logger.info("cisco %s: running %s", label, " ".join(args))
     try:
         rc, stdout, stderr = _run(args, timeout=timeout, env=env)
     except BridgeError as exc:
+        _logger.warning("cisco %s: bridge error: %s", label, exc)
         return {"findings": [], "notes": [f"cisco {label}: {exc}"], "ok": False}
 
+    _logger.debug(
+        "cisco %s: rc=%d stdout=%dB stderr=%dB",
+        label, rc, len(stdout or ""), len(stderr or ""),
+    )
     if rc not in (0, 1):  # cisco emits 1 when threats found
         snippet = (stderr or stdout or "").strip().splitlines()[-1:] or [""]
+        _logger.warning("cisco %s exited rc=%d (last line: %s)", label, rc, snippet[0][:160])
         notes.append(f"cisco {label} exited rc={rc}: {snippet[0]}")
         return {"findings": [], "notes": notes, "ok": False}
 
     payload = _parse_stdout(stdout)
     if payload is None:
+        last_stderr = (stderr or "").strip().splitlines()[-1:] or [""]
+        _logger.warning(
+            "cisco %s: unparseable output; last stderr line: %s",
+            label, last_stderr[0][:160],
+        )
         notes.append(f"cisco {label}: unparseable JSON output")
         return {"findings": [], "notes": notes, "ok": False}
 
     findings = _findings_from_payload(payload)
+    _logger.info("cisco %s: %d findings extracted", label, len(findings))
     return {"findings": findings, "notes": notes, "ok": True}
 
 

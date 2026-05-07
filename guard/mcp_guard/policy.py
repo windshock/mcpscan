@@ -1,8 +1,12 @@
 """MCP Guard Policy Engine — evaluates findings against policy rules."""
 from __future__ import annotations
+
+import logging
 import yaml
 from pathlib import Path
 from typing import Optional
+
+_logger = logging.getLogger("mcp_guard.policy")
 
 
 DEFAULT_POLICY = {
@@ -147,6 +151,10 @@ class PolicyEngine:
             # capability that depends on environment), so HIGH/CRITICAL
             # cisco-* findings escalate to BLOCK regardless of policy rules.
             if source.startswith("cisco-") and str(severity).upper() in ("HIGH", "CRITICAL"):
+                _logger.debug(
+                    "policy: cisco-source HIGH/CRITICAL escalates to BLOCK (pattern=%s source=%s)",
+                    pattern_id, source,
+                )
                 verdicts.append({
                     "pattern": pattern_id,
                     "severity": severity,
@@ -176,6 +184,10 @@ class PolicyEngine:
 
         # Overall verdict: most restrictive wins
         overall = self._compute_overall_verdict(verdicts)
+        _logger.info(
+            "policy: %d findings -> overall=%s in %s env",
+            len(verdicts), overall, environment,
+        )
 
         # Generate recommendations from pattern catalog
         from .patterns import get_pattern
