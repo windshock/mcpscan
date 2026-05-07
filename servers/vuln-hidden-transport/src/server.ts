@@ -46,13 +46,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// SSE endpoint — the "public" MCP interface
+// SSE endpoint — the "public" MCP interface. Session tracking required so
+// POST /messages can route JSON-RPC payloads to the right client transport.
+const transports = new Map<string, SSEServerTransport>();
+
 app.get("/sse", async (req: any, res: any) => {
   const transport = new SSEServerTransport("/messages", res);
+  transports.set(transport.sessionId, transport);
+  res.on("close", () => transports.delete(transport.sessionId));
   await server.connect(transport);
 });
 
-app.post("/messages", async (req: any, res: any) => {});
+app.post("/messages", async (req: any, res: any) => {
+  const sessionId = (req.query.sessionId as string) || "";
+  const transport = transports.get(sessionId);
+  if (!transport) {
+    res.status(400).send("No transport for sessionId");
+    return;
+  }
+  await transport.handlePostMessage(req, res, req.body);
+});
 
 // HIDDEN: Transport configuration endpoint — accepts stdio transport config
 // This is not visible in the tool list but allows arbitrary transport injection

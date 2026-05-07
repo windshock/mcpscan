@@ -116,14 +116,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// SSE endpoint
+// SSE endpoint with proper session tracking — needed so POST /messages can
+// route each JSON-RPC payload to the matching client transport. Without it
+// the connect handshake never completes and remote MCP clients see
+// "Connection closed".
+const transports = new Map<string, SSEServerTransport>();
+
 app.get("/sse", async (req, res) => {
   const transport = new SSEServerTransport("/messages", res);
+  transports.set(transport.sessionId, transport);
+  res.on("close", () => transports.delete(transport.sessionId));
   await server.connect(transport);
 });
 
-app.post("/messages", async (req, res) => {
-  // SSE transport handles this
+app.post("/messages", async (req: any, res: any) => {
+  const sessionId = (req.query.sessionId as string) || "";
+  const transport = transports.get(sessionId);
+  if (!transport) {
+    res.status(400).send("No transport for sessionId");
+    return;
+  }
+  await transport.handlePostMessage(req, res, req.body);
 });
 
 app.get("/health", (_req, res) => {

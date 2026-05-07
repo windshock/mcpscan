@@ -214,6 +214,58 @@ class ScannerRegressionTests(unittest.TestCase):
         self.assertIn("unrestricted_directory_listing", finding_ids)
         self.assertNotIn("unrestricted_file_read", finding_ids)
 
+    def test_list_tools_falls_back_to_streamable_http_when_sse_fails(self):
+        """If SSE handshake fails, _list_tools_via_mcp tries streamable-http."""
+        from mcp_guard import scanner as scanner_module
+        import asyncio
+
+        sse_calls = []
+        sh_calls = []
+
+        async def fake_sse(url):
+            sse_calls.append(url)
+            raise RuntimeError("Connection closed")
+
+        async def fake_streamable(url):
+            sh_calls.append(url)
+            return [{"name": "execute"}]
+
+        with patch.object(scanner_module, "_list_tools_via_sse", fake_sse), patch.object(
+            scanner_module, "_list_tools_via_streamable_http", fake_streamable
+        ), patch.object(scanner_module, "streamablehttp_client", object()):
+            tools, transport = asyncio.run(
+                scanner_module._list_tools_via_mcp(
+                    "http://x:1/sse",
+                    "http://x:1",
+                )
+            )
+        self.assertEqual(transport, "streamable_http")
+        self.assertEqual(tools[0]["name"], "execute")
+        self.assertEqual(sse_calls, ["http://x:1/sse"])
+        # Tries /mcp first, then base
+        self.assertEqual(sh_calls, ["http://x:1/mcp"])
+
+    def test_list_tools_uses_sse_when_it_works(self):
+        from mcp_guard import scanner as scanner_module
+        import asyncio
+
+        async def fake_sse(url):
+            return [{"name": "ok"}]
+
+        async def fake_streamable(url):
+            raise AssertionError("streamable-http should not be called when SSE succeeds")
+
+        with patch.object(scanner_module, "_list_tools_via_sse", fake_sse), patch.object(
+            scanner_module, "_list_tools_via_streamable_http", fake_streamable
+        ):
+            tools, transport = asyncio.run(
+                scanner_module._list_tools_via_mcp(
+                    "http://x:1/sse", "http://x:1"
+                )
+            )
+        self.assertEqual(transport, "sse")
+        self.assertEqual(tools[0]["name"], "ok")
+
     def test_endpoint_dedups_same_tool_multi_indicator(self):
         """One tool firing command_exec via name + cmd param should emit once."""
         fake_probe = {

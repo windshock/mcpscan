@@ -12,6 +12,14 @@ from urllib.request import Request, urlopen
 
 from mcp import ClientSession
 from mcp.client.sse import sse_client
+try:
+    from mcp.client.streamable_http import streamable_http_client as streamablehttp_client
+except ImportError:
+    try:
+        # older mcp clients export the same factory under a different spelling
+        from mcp.client.streamable_http import streamablehttp_client  # type: ignore[no-redef]
+    except ImportError:  # mcp client too old to have streamable-http transport
+        streamablehttp_client = None  # type: ignore[assignment]
 
 from .patterns import PATTERNS, find_matching_patterns
 
@@ -135,17 +143,22 @@ def probe_endpoint(endpoint_url: str) -> dict:
 
     _logger.debug("probe_endpoint: SSE listing at %s", sse_url)
     try:
-        tools = asyncio.run(_list_tools_via_sse(sse_url))
+        tools, transport_used = asyncio.run(_list_tools_via_mcp(sse_url, base_url))
         summary["reachable"] = True
         summary["mcp_detected"] = True
         summary["auth_required"] = False
-        summary["markers"].extend(["sse_endpoint", "mcp_tools_listed"])
+        summary["markers"].extend([f"{transport_used}_endpoint", "mcp_tools_listed"])
         summary["tools"] = tools
         summary["tool_count"] = len(tools)
         summary["tool_names"] = [tool.get("name", "") for tool in tools]
-        summary["checks"].append({"url": sse_url, "kind": "mcp_sse", "status": 200})
-        _logger.info("probe_endpoint: SSE listing OK, %d tools: %s",
-                     len(tools), summary["tool_names"])
+        summary["checks"].append(
+            {"url": sse_url, "kind": f"mcp_{transport_used}", "status": 200}
+        )
+        summary["transport"] = transport_used
+        _logger.info(
+            "probe_endpoint: %s listing OK, %d tools: %s",
+            transport_used, len(tools), summary["tool_names"],
+        )
     except Exception as exc:
         summary["error"] = str(exc)
         summary["checks"].append(
@@ -156,7 +169,7 @@ def probe_endpoint(endpoint_url: str) -> dict:
                 "error": str(exc),
             }
         )
-        _logger.info("probe_endpoint: SSE listing failed: %s", str(exc)[:120])
+        _logger.info("probe_endpoint: MCP listing failed (sse + streamable-http): %s", str(exc)[:120])
 
     for path in ("/health", "/", "/messages"):
         check = _http_probe(urljoin(base_url, path.lstrip("/")))
@@ -529,8 +542,52 @@ def _extract_tool_descriptions(code: str) -> list[str]:
     return descriptions
 
 
+async def _list_tools_via_mcp(sse_url: str, base_url: str) -> tuple[list[dict], str]:
+    """Try SSE transport first, fall back to streamable-http.
+
+    Returns (tools, transport_name). Raises the final exception if both
+    transports fail. SSE is tried because it's still the most common
+    deployment; streamable-http is the newer transport and the future
+    direction of MCP, so we fall back to it for forward compatibility.
+    """
+    try:
+        tools = await _list_tools_via_sse(sse_url)
+        return tools, "sse"
+    except Exception as sse_exc:
+        if streamablehttp_client is None:
+            raise sse_exc
+        # Streamable-http typically lives at /mcp; try a few common paths.
+        candidates = [
+            urljoin(f"{base_url}/", "mcp"),
+            base_url,
+        ]
+        last_exc: Exception = sse_exc
+        for candidate_url in candidates:
+            try:
+                tools = await _list_tools_via_streamable_http(candidate_url)
+                return tools, "streamable_http"
+            except Exception as streamable_exc:
+                last_exc = streamable_exc
+                continue
+        raise last_exc
+
+
 async def _list_tools_via_sse(sse_url: str) -> list[dict]:
     async with sse_client(sse_url, timeout=3, sse_read_timeout=3) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+            result = await session.list_tools()
+            return [
+                tool.model_dump(by_alias=True, mode="json", exclude_none=True)
+                for tool in result.tools
+            ]
+
+
+async def _list_tools_via_streamable_http(url: str) -> list[dict]:
+    """List MCP tools over streamable-http transport (newer MCP spec)."""
+    if streamablehttp_client is None:
+        raise RuntimeError("streamable-http transport not available in this mcp client")
+    async with streamablehttp_client(url, timeout=3, sse_read_timeout=3) as (read_stream, write_stream, _):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
             result = await session.list_tools()

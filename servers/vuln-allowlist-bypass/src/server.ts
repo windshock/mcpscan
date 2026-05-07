@@ -108,12 +108,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
+// Track active SSE transports by session id so POST /messages can route
+// each JSON-RPC payload to the matching client. Without this the connect
+// handshake never completes and `mcp-guard scan --endpoint` would see a
+// "Connection closed" error.
+const transports = new Map<string, SSEServerTransport>();
+
 app.get("/sse", async (req, res) => {
   const transport = new SSEServerTransport("/messages", res);
+  transports.set(transport.sessionId, transport);
+  res.on("close", () => transports.delete(transport.sessionId));
   await server.connect(transport);
 });
 
-app.post("/messages", async (req, res) => {});
+app.post("/messages", async (req: any, res: any) => {
+  const sessionId = (req.query.sessionId as string) || "";
+  const transport = transports.get(sessionId);
+  if (!transport) {
+    res.status(400).send("No transport for sessionId");
+    return;
+  }
+  await transport.handlePostMessage(req, res, req.body);
+});
 
 app.get("/health", (_req: any, res: any) => {
   res.json({ status: "ok", server: "vuln-allowlist-bypass" });

@@ -7,7 +7,7 @@
 
 FROM python:3.12-slim
 
-ARG WHEEL=mcp_guard-0.2.1-py3-none-any.whl
+ARG WHEEL=mcp_guard-0.2.2-py3-none-any.whl
 
 LABEL org.opencontainers.image.title="mcp-guard"
 LABEL org.opencontainers.image.description="Policy-based MCP security guardrail with optional cisco-mcp-scanner integration"
