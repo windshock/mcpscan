@@ -198,8 +198,9 @@ require_runner_container
 require_command python3
 require_command mcpscan
 require_command mcp-guard
+require_command snyk-agent-scan
 
-mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
+mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$RAW_DIR/invariant-scan" "$RAW_DIR/invariant-config" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
 
 echo "=========================================="
 echo " MCP Security Lab — Scanner Runner"
@@ -331,6 +332,69 @@ PY
 else
   echo ""
   echo ">>> Skipping Cisco config-mode stage (OX fixture not found)"
+fi
+
+# ── Invariant/Snyk mcp-scan (remote SSE) ─────────
+# `mcp-scan` (renamed `snyk-agent-scan`) calls api.snyk.io to analyse tool
+# descriptions, requires SNYK_TOKEN. Without one, `issues` is always empty —
+# we still record the run so the comparison report shows the dependency
+# explicitly instead of silently zero.
+if [[ -z "${SNYK_TOKEN:-}" ]]; then
+  echo ""
+  echo ">>> Skipping Invariant/Snyk mcp-scan stages (SNYK_TOKEN not set; would return 0 issues)"
+  for server in "${!SERVERS[@]}"; do
+    write_result_json "$RAW_DIR/invariant-scan/${server}.json" "invariant-scan" "$server" "-" "skipped" \
+      "SNYK_TOKEN unset; mcp-scan returns issues=[] without auth" "-" "" ""
+  done
+else
+  echo ""
+  echo ">>> Running Invariant/Snyk mcp-scan (remote SSE mode)"
+  inv_tmp="$(mktemp -d)"
+  for server in "${!SERVERS[@]}"; do
+    endpoint="${ENDPOINTS[$server]:-}"
+    if [[ -z "$endpoint" ]]; then
+      write_result_json "$RAW_DIR/invariant-scan/${server}.json" "invariant-scan" "$server" "-" "skipped" \
+        "no SSE endpoint mapped for $server" "-" "" ""
+      continue
+    fi
+    cfg="$inv_tmp/${server}.json"
+    python3 - "$cfg" "$server" "$endpoint" <<'PY'
+import json, sys
+cfg, name, url = sys.argv[1:]
+json.dump({"mcpServers": {name.replace("-", "_"): {"type": "sse", "url": url}}}, open(cfg, "w"))
+PY
+    echo "  Scanning $server ($endpoint)..."
+    run_stdout_scanner_json "invariant-scan" "$server" "$endpoint" "$RAW_DIR/invariant-scan/${server}.json" "0 1 2" \
+      snyk-agent-scan scan --json --server-timeout 30 "$cfg"
+  done
+  rm -rf "$inv_tmp"
+fi
+
+# ── Invariant/Snyk mcp-scan (config-mode against OX corpus) ──
+if [[ -n "${SNYK_TOKEN:-}" && -f "$OX_FIXTURE" ]]; then
+  echo ""
+  echo ">>> Running Invariant/Snyk mcp-scan (config mode against OX research corpus)"
+  ox_inv_tmp="$(mktemp -d)"
+  python3 - "$OX_FIXTURE" "$ox_inv_tmp" <<'PY'
+import json, sys, pathlib
+fixture, outdir = sys.argv[1], pathlib.Path(sys.argv[2])
+cases = json.loads(pathlib.Path(fixture).read_text())
+for case in cases:
+    name = case["name"].replace(" ", "_").replace("/", "_")
+    (outdir / f"{name}.json").write_text(json.dumps(case["payload"], indent=2))
+PY
+  for case_file in "$ox_inv_tmp"/*.json; do
+    case_name="$(basename "$case_file" .json)"
+    echo "  Scanning $case_name..."
+    # Stdio cases require user consent to launch — pass --dangerously-run-mcp-servers
+    # so the corpus runs unattended. Lab-only; do NOT use this flag against
+    # untrusted configs in production.
+    run_stdout_scanner_json "invariant-config" "$case_name" "$case_file" \
+      "$RAW_DIR/invariant-config/${case_name}.json" "0 1 2" \
+      snyk-agent-scan scan --json --dangerously-run-mcp-servers --suppress-mcpserver-io true \
+        --server-timeout 15 "$case_file"
+  done
+  rm -rf "$ox_inv_tmp"
 fi
 
 # ── Normalize & Report ───────────────────────────

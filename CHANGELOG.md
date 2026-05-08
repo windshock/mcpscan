@@ -2,6 +2,12 @@
 
 All notable user-facing changes to `mcp-guard`. Earlier versions only had a single bootstrapping commit; semantic-version history starts at v0.1.0.
 
+## v0.2.5 — 2026-05-08
+
+- Lab: added Invariant/Snyk `mcp-scan` (legacy `mcp-scan` PyPI package now redirects to `snyk-agent-scan`) as a third external scanner. Two new stages in `runner/run-scans.sh` — live SSE mode against the 11 lab servers, and config mode against the OX research supply-chain corpus. Both stages require `SNYK_TOKEN` (loaded from `.env`); without it the runner records `skipped` results so the report shows the dependency explicitly instead of silent zeros.
+- `runner/reporting.py`: new `INVARIANT_ISSUE_MAP` (E001/W001/W017/etc. → lab vuln_type), `normalize_invariant`, `generate_invariant_config_outputs`, and `invariant-supply-chain.md` aggregate report. Comparison table now lists invariant-scan alongside cisco/mcp-guard.
+- Docs: `docs/threat-models.md` rewritten as a 3-column table (mcp-guard / cisco / invariant-snyk) with an explicit note about `api.snyk.io` dependency and air-gapped behaviour. Snapshot benchmark numbers in README: invariant-scan = 4 TP / 8 FP / 20 FN against the lab's 24 expected findings (recall 16.7 %, precision 33.3 %).
+
 ## v0.2.4 — 2026-05-07
 
 - `mcp-guard scan --endpoint <local>` now surfaces `public_tunnels` in the target metadata when a docker tunnel container forwards to that local port. Direct endpoint scans are now consistent with `discover` / `--auto-all` for tunnel exposure.

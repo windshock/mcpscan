@@ -240,6 +240,17 @@ services:
     volumes:
       - ./results/raw/cisco-scanner:/output
 
+  invariant-scan:
+    build:
+      context: ./scanners/invariant-scan
+      dockerfile: Dockerfile
+    networks:
+      - mcp-lab
+    environment:
+      - SNYK_TOKEN=${SNYK_TOKEN:-}
+    volumes:
+      - ./results/raw/invariant-scan:/output
+
   inspector:
     build:
       context: ./scanners/inspector
@@ -270,6 +281,9 @@ services:
       - vuln-hidden-transport
       - mcpscan
       - cisco-scanner
+      - invariant-scan
+    environment:
+      - SNYK_TOKEN=${SNYK_TOKEN:-}
     volumes:
       - ./servers:/servers:ro
       - ./results:/results

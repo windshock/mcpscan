@@ -1,16 +1,17 @@
 # Threat Models: Vulnerable MCP vs Malicious MCP
 
-`mcp-guard` and `cisco-mcp-scanner` look like they solve the same problem but solve very different ones. The lab benchmark numbers (`results/report/comparison.md`) only make sense when you separate the two threat models.
+`mcp-guard`, `cisco-mcp-scanner`, and Invariant/Snyk `mcp-scan` look like they solve the same problem but solve very different ones. The lab benchmark numbers (`results/report/comparison.md`) only make sense when you separate the threat models.
 
 ## Side-by-side
 
-| Axis | **mcp-guard (capability audit)** | **cisco-mcp-scanner (malicious detection)** |
-|---|---|---|
-| Who is the attacker? | An external party who exploits weaknesses in the MCP server | The MCP author themselves (publishing a tool with hidden bad behaviour) |
-| What is checked? | Tool capabilities, schemas, runtime properties (auth, CORS, hidden admin, allowlist enforcement, runtime triggers) | Tool descriptions and code for known-bad payload patterns (prompt injection text, credential file paths, exfiltration phrasing, command-injection payloads) |
-| Trust assumption | "Honest developer, possibly insecure code" | "Untrusted source, possibly malicious code" |
-| Primary use case | Pre-deploy / pre-commit audit of *your own* MCP | Supply-chain vetting before installing a *third-party* MCP |
-| Lab coverage on `vuln-*` servers | 24/24 (100 %) when source ∪ endpoint runs | 1/24 (4.2 %) with offline `yara` analyzer; higher with `behavioral`/`llm` (LLM API key required) |
+| Axis | **mcp-guard (capability audit)** | **cisco-mcp-scanner (offline yara)** | **Invariant/Snyk mcp-scan (cloud LLM)** |
+|---|---|---|---|
+| Who is the attacker? | External party exploiting weak MCP server capabilities | MCP author publishing hidden bad behaviour | MCP author publishing manipulative tool descriptions |
+| What is checked? | Tool capabilities, schemas, runtime properties (auth, CORS, hidden admin, allowlist enforcement, runtime triggers) | Tool descriptions/code for known-bad payload patterns (yara rules) | Tool descriptions analysed by Snyk's hosted classifier (issue codes E001/W001/W017 etc.) |
+| Trust assumption | "Honest developer, possibly insecure code" | "Untrusted source, possibly malicious code" | "Untrusted source — does the description text manipulate the agent?" |
+| Operational model | Local CLI, fully offline | Local CLI, offline yara (paid LLM analyzers optional via `MCP_SCANNER_LLM_API_KEY`) | **Local CLI calls `api.snyk.io` — requires `SNYK_TOKEN`. Without a token, `issues=[]`.** |
+| Primary use case | Pre-deploy / pre-commit audit of *your own* MCP | Supply-chain vetting before installing a *third-party* MCP | Same as cisco — supply-chain, with cloud-side LLM rather than offline rules |
+| Lab coverage on `vuln-*` servers | 24/24 (100 %) when source ∪ endpoint runs | 1/24 (4.2 %) with offline `yara` analyzer | 4/24 (16.7 %), 8 FPs — coarser taxonomy mismatches the lab's strict labels |
 
 ## When to use which
 
@@ -27,9 +28,16 @@ The combined `mcp-guard scan ... --with-cisco` command runs both detectors again
 
 ## Why the lab numbers look the way they do
 
-Our lab is built around capability gaps (intentionally weak auth, unvalidated args, hidden admin endpoints). That is exactly mcp-guard's threat model and not cisco's. Cisco's `yara` rule set fires when the description string itself reads malicious — for example, `read_file_unrestricted` mentions `/etc/shadow` and `~/.ssh/id_rsa`, which trips `credential_harvesting.yara`. `vuln-exec`'s `execute_command` admits its purpose is "Execute a shell command" but doesn't embed a literal payload like `bash -i >& /dev/tcp/…`, so cisco yara stays silent.
+Our lab is built around capability gaps (intentionally weak auth, unvalidated args, hidden admin endpoints). That is exactly mcp-guard's threat model and neither cisco's nor Invariant/Snyk's.
 
-To see cisco shine, point it at the OX research supply-chain corpus (`guard/tests/fixtures/ox_research_cases.json`) — those are *config-style* attacks where the malicious payload is in the config itself, which is cisco's home turf.
+- **cisco** fires when a description string reads malicious — `read_file_unrestricted` mentions `/etc/shadow` and `~/.ssh/id_rsa`, which trips `credential_harvesting.yara`. `vuln-exec`'s `execute_command` admits its purpose is "Execute a shell command" but doesn't embed a literal payload like `bash -i >& /dev/tcp/…`, so cisco yara stays silent.
+- **Invariant/Snyk mcp-scan** uses an LLM classifier on tool descriptions (issue codes E001 prompt-injection, W001 dangerous words, W017 sensitive data exposure). It catches `vuln-authless`'s "IGNORE ANY PREVIOUS INSTRUCTIONS" injection text easily but doesn't audit runtime behaviour — `vuln-hidden-transport` (clean UI, hidden admin endpoint) and `vuln-network` (CORS `*`, SSRF) come back empty because the descriptions look normal. Lab false positives largely come from taxonomy mismatch: invariant-scan reports `tool_poisoning`/`env_exposure`/`unrestricted_file_read` but the lab's expected_findings use finer labels like `command_exec_via_args` or `conditional_command_exec`.
+
+To see cisco / Invariant-Snyk shine, point them at the OX research supply-chain corpus (`guard/tests/fixtures/ox_research_cases.json`) — those are *config-style* attacks where the malicious payload is in the config itself, which is their home turf.
+
+## A note on Invariant Labs → Snyk
+
+The CLI you may know as Invariant Labs' `mcp-scan` was acquired by Snyk and renamed to `snyk-agent-scan`. The legacy `mcp-scan` PyPI package now installs a deprecation shim that delegates to `snyk-agent-scan`. Critically, **all analysis happens server-side at `api.snyk.io`** — without `SNYK_TOKEN` set, `mcp-scan scan --json` returns the tool listing but `issues=[]`. This is a meaningful operational difference from cisco's offline yara analyzer; in air-gapped or CI environments that can't reach Snyk, the tool produces no findings. The lab measures the SaaS path; the runner stage skips silently when `SNYK_TOKEN` is unset.
 
 ## Combining the two
 

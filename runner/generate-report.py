@@ -4,7 +4,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from reporting import generate_cisco_config_outputs, generate_lab_outputs, generate_ox_live_outputs
+from reporting import (
+    generate_cisco_config_outputs,
+    generate_invariant_config_outputs,
+    generate_lab_outputs,
+    generate_ox_live_outputs,
+)
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -31,15 +36,17 @@ def _resolve_ox_research_fixture() -> Path:
 def main() -> None:
     lab_results = generate_lab_outputs(RESULTS_DIR, LAB_EXPECTED_FILE)
     ox_results = generate_ox_live_outputs(RESULTS_DIR, OX_EXPECTED_FILE)
-    cisco_config_results = generate_cisco_config_outputs(
-        RESULTS_DIR, _resolve_ox_research_fixture()
-    )
+    fixture_file = _resolve_ox_research_fixture()
+    cisco_config_results = generate_cisco_config_outputs(RESULTS_DIR, fixture_file)
+    invariant_config_results = generate_invariant_config_outputs(RESULTS_DIR, fixture_file)
 
     print(f"Generated {len(lab_results)} lab normalized results")
     if ox_results:
         print(f"Generated {len(ox_results)} OX live normalized results")
     if cisco_config_results:
         print(f"Generated {len(cisco_config_results)} cisco supply-chain results")
+    if invariant_config_results:
+        print(f"Generated {len(invariant_config_results)} invariant supply-chain results")
     print(f"Reports saved to {RESULTS_DIR / 'report'}")
 
 

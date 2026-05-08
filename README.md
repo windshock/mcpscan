@@ -28,6 +28,7 @@ The five work items from [docs/COMPLETION_PLAN.md](docs/COMPLETION_PLAN.md) are 
 |---|---:|---:|---:|---:|---:|
 | MCPScan (semgrep taint) | 0 | 4 | 24 | 0.0% | 0.0% |
 | Cisco mcp-scanner (yara analyzer, no API keys) | 1 | 1 | 23 | 4.2% | 50.0% |
+| Invariant/Snyk mcp-scan (live SSE, requires `SNYK_TOKEN`) | 4 | 8 | 20 | 16.7% | 33.3% |
 | mcp-guard (source path) | 23 | 0 | 1 | 95.8% | 100% |
 | mcp-guard-endpoint (live SSE + HTTP probe) | 15 | 0 | 9 | 62.5% | 100% |
 | **mcp-guard combined (source ∪ endpoint)** | **24** | **0** | **0** | **100%** | **100%** |
@@ -38,13 +39,14 @@ The TypeScript lab servers (`vuln-network`, `vuln-allowlist-bypass`) ship an old
 
 ## Threat Models
 
-`mcp-guard` and `cisco-mcp-scanner` are complementary, not redundant — see [docs/threat-models.md](docs/threat-models.md) for the full discussion.
+`mcp-guard`, `cisco-mcp-scanner`, and Invariant/Snyk `mcp-scan` are complementary, not redundant — see [docs/threat-models.md](docs/threat-models.md) for the full discussion.
 
-| | **mcp-guard** | **cisco-mcp-scanner (yara)** |
-|---|---|---|
-| Looks for | Capability gaps (authless, unrestricted file/env, allowlist bypass, hidden admin, runtime-only) | Malicious-intent payloads in tool descriptions/code |
-| Use case | Audit your own MCP before deploy | Vet a third-party MCP before install |
-| Lab recall | 100 % combined | 4.2 % (capability lab is outside cisco-yara's scope) |
+| | **mcp-guard** | **cisco-mcp-scanner (yara)** | **Invariant/Snyk mcp-scan** |
+|---|---|---|---|
+| Looks for | Capability gaps (authless, unrestricted file/env, allowlist bypass, hidden admin, runtime-only) | Malicious-intent payloads in tool descriptions/code | Manipulative tool descriptions (LLM-classified) |
+| Operational model | Local CLI, fully offline | Local CLI, offline yara | Local CLI → `api.snyk.io` (requires `SNYK_TOKEN`) |
+| Use case | Audit your own MCP before deploy | Vet a third-party MCP before install | Same — supply-chain check, cloud LLM analyser |
+| Lab recall | 100 % combined | 4.2 % (capability lab is outside cisco-yara's scope) | 16.7 % (description-only signal) |
 
 ## Integrated Usage
 

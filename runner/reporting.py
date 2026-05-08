@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Any
 
 
-LAB_SCANNERS = ("mcpscan", "cisco-scanner", "mcp-guard", "mcp-guard-endpoint")
-OPTIONAL_LAB_SCANNERS = frozenset({"mcp-guard-endpoint"})
+LAB_SCANNERS = ("mcpscan", "cisco-scanner", "invariant-scan", "mcp-guard", "mcp-guard-endpoint")
+OPTIONAL_LAB_SCANNERS = frozenset({"mcp-guard-endpoint", "invariant-scan"})
 
 
 def load_json(path: Path, default: Any = None) -> Any:
@@ -219,6 +219,62 @@ def normalize_cisco(raw: dict, server_name: str, expected: dict) -> dict[str, An
 def normalize_guard(raw: dict, server_name: str, expected: dict) -> dict[str, Any]:
     findings = [finding for finding in raw.get("findings", []) if isinstance(finding, str)]
     return normalize_lab_result("mcp-guard", raw, server_name, expected, findings, raw.get("policy_verdict"))
+
+
+# Invariant/Snyk mcp-scan issue codes → lab vuln_type. Codes documented at
+# https://docs.snyk.io/scan-with-snyk/snyk-agent-scan/issue-types and observed
+# from live runs against the lab corpus.
+INVARIANT_ISSUE_MAP = {
+    "E001": "tool_poisoning",   # Prompt injection found
+    "E002": "tool_poisoning",   # Tool shadowing / hijack
+    "E003": "tool_poisoning",   # Goal manipulation
+    "W001": "tool_poisoning",   # Dangerous words (lower confidence)
+    "W002": "tool_poisoning",   # Manipulative formatting
+    "W015": "command_exec",     # Code execution capability
+    "W017": "env_exposure",     # Sensitive Data Exposure (env / file paths)
+    "W018": "unrestricted_file_read",
+}
+
+
+def _map_invariant_issue(code: str, evidence: str) -> str | None:
+    if not code:
+        return None
+    mapped = INVARIANT_ISSUE_MAP.get(code.upper())
+    if mapped:
+        # W017 fires for both env-var leakage and unrestricted file read; use
+        # evidence text to disambiguate the two when possible.
+        if code.upper() == "W017" and evidence:
+            ev = evidence.lower()
+            if "environment" in ev or "env var" in ev:
+                return "env_exposure"
+            if any(token in ev for token in ("/etc/", "ssh", "id_rsa", "/root/", "any file")):
+                return "unrestricted_file_read"
+        return mapped
+    return None
+
+
+def normalize_invariant(raw: dict, server_name: str, expected: dict) -> dict[str, Any]:
+    """Normalise a `mcp-scan scan --json` payload.
+
+    The CLI emits a dict keyed by the input config-file path. Each value carries
+    `servers` (tool listings) and `issues` (analysis results from api.snyk.io).
+    """
+    findings: list[str] = []
+
+    if isinstance(raw, dict):
+        for key, payload in raw.items():
+            if key.startswith("scan_") or not isinstance(payload, dict):
+                continue
+            for issue in payload.get("issues") or []:
+                if not isinstance(issue, dict):
+                    continue
+                code = str(issue.get("code", ""))
+                evidence = str((issue.get("extra_data") or {}).get("evidence", ""))
+                mapped = _map_invariant_issue(code, evidence)
+                if mapped:
+                    findings.append(mapped)
+
+    return normalize_lab_result("invariant-scan", raw, server_name, expected, findings)
 
 
 def build_failed_ox_result(product_id: str, expected: dict[str, Any], error: str, source_file: Path) -> dict[str, Any]:
@@ -569,6 +625,8 @@ def generate_lab_outputs(results_dir: Path, expected_file: Path) -> list[dict[st
                 )
             elif scanner_name == "cisco-scanner":
                 normalized = normalize_cisco(raw, server_name, server_expected)
+            elif scanner_name == "invariant-scan":
+                normalized = normalize_invariant(raw, server_name, server_expected)
             elif scanner_name == "mcp-guard-endpoint":
                 normalized = normalize_guard(raw, server_name, server_expected)
                 normalized["scanner_name"] = "mcp-guard-endpoint"
@@ -661,6 +719,115 @@ def generate_cisco_config_outputs(results_dir: Path, fixture_file: Path) -> list
             f.write(report)
 
     return normalized
+
+
+def generate_invariant_config_outputs(results_dir: Path, fixture_file: Path) -> list[dict[str, Any]]:
+    """Normalize Invariant/Snyk mcp-scan config-mode runs against the OX corpus."""
+    raw_dir = results_dir / "raw" / "invariant-config"
+    norm_dir = results_dir / "normalized" / "invariant-config"
+    report_dir = results_dir / "report"
+
+    if not raw_dir.exists() or not any(raw_dir.glob("*.json")):
+        return []
+
+    norm_dir.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    cases_data = load_json(fixture_file, default=[]) or []
+    expected_by_key: dict[str, dict[str, Any]] = {}
+    for case in cases_data:
+        if not isinstance(case, dict):
+            continue
+        name = case.get("name")
+        if not name:
+            continue
+        normalized_key = name.replace(" ", "_").replace("/", "_")
+        expected_by_key[normalized_key] = {
+            "name": name,
+            "source": case.get("source", ""),
+            "expected_findings": case.get("expected_findings", []) or [],
+            "expected_false_positives": case.get("expected_false_positives", []) or [],
+        }
+
+    normalized: list[dict[str, Any]] = []
+    for raw_file in sorted(raw_dir.glob("*.json")):
+        key = raw_file.stem
+        case = expected_by_key.get(key, {})
+        raw, raw_error = load_json_payload(raw_file)
+        expected = {
+            "expected_findings": case.get("expected_findings", []),
+            "expected_false_positives": case.get("expected_false_positives", []),
+        }
+
+        if raw_error:
+            entry = build_failed_lab_result("invariant-config", key, expected, raw_error, raw_file)
+        elif not isinstance(raw, dict):
+            entry = build_failed_lab_result(
+                "invariant-config",
+                key,
+                expected,
+                f"unexpected JSON type in {raw_file.name}: {type(raw).__name__}",
+                raw_file,
+            )
+        else:
+            entry = normalize_invariant(raw, key, expected)
+            entry["scanner_name"] = "invariant-config"
+
+        entry["case_name"] = case.get("name") or key
+        entry["case_source"] = case.get("source", "")
+        normalized.append(entry)
+
+        with open(norm_dir / f"{key}.json", "w") as f:
+            json.dump(entry, f, indent=2)
+            f.write("\n")
+
+    if normalized:
+        report = _generate_invariant_config_report(normalized)
+        with open(report_dir / "invariant-supply-chain.md", "w") as f:
+            f.write(report)
+
+    return normalized
+
+
+def _generate_invariant_config_report(results: list[dict[str, Any]]) -> str:
+    lines = ["# Invariant/Snyk Supply-Chain Coverage (mcp-scan config mode against OX research corpus)\n"]
+    lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}\n")
+
+    total_tp = sum(len(r["true_positives"]) for r in results)
+    total_fp = sum(len(r["false_positives"]) for r in results)
+    total_fn = sum(len(r["missed_findings"]) for r in results)
+    total_expected = sum(len(r["expected_findings"]) for r in results)
+    successes = sum(1 for r in results if r.get("status", "success") == "success")
+
+    lines.append(f"- **Cases scanned**: {len(results)} ({successes} succeeded)")
+    lines.append(f"- **True Positives**: {total_tp}")
+    lines.append(f"- **False Positives**: {total_fp}")
+    lines.append(f"- **False Negatives**: {total_fn}")
+    lines.append(f"- **Total Expected Findings**: {total_expected}")
+    if total_expected:
+        lines.append(f"- **Recall**: {total_tp/total_expected:.1%}")
+    if total_tp + total_fp:
+        lines.append(f"- **Precision**: {total_tp/(total_tp+total_fp):.1%}")
+    lines.append("")
+    lines.append("> This stage runs `mcp-scan scan --json --dangerously-run-mcp-servers` against the OX research supply-chain corpus. Requires `SNYK_TOKEN`; mcp-scan delegates analysis to api.snyk.io.")
+    lines.append("")
+
+    lines.append("| Case | Status | Detected | TP | FP | FN |")
+    lines.append("|---|---|---|---:|---:|---:|")
+    for r in sorted(results, key=lambda item: item.get("case_name", item["target"])):
+        detected = ", ".join(r["detected_findings"]) or "—"
+        lines.append(
+            "| {name} | {status} | {detected} | {tp} | {fp} | {fn} |".format(
+                name=r.get("case_name", r["target"]),
+                status=r.get("status", "success"),
+                detected=detected,
+                tp=len(r["true_positives"]),
+                fp=len(r["false_positives"]),
+                fn=len(r["missed_findings"]),
+            )
+        )
+
+    return "\n".join(lines)
 
 
 def _generate_cisco_config_report(results: list[dict[str, Any]]) -> str:

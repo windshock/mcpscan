@@ -44,6 +44,12 @@ ENV PATH="/root/.local/bin:${PATH}"
 RUN pip install --no-cache-dir uv && \
     uv tool install --python 3.13 cisco-ai-mcp-scanner
 
+# Install Invariant/Snyk mcp-scan. The legacy `mcp-scan` PyPI package is now a
+# shim that delegates to `snyk-agent-scan`, so we install the real package
+# directly. Requires SNYK_TOKEN at run time to call api.snyk.io for analysis;
+# without one the `issues` array is always empty.
+RUN uv tool install --python 3.13 snyk-agent-scan
+
 # MCPScan loads its LLM client at import time and aborts when DEEPSEEK_API_KEY is
 # unset, even with --no-monitor-* flags. We only run static taint analysis, so a
 # dummy key is enough to bypass the eager check.
