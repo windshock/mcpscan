@@ -2,6 +2,12 @@
 
 All notable user-facing changes to `mcp-guard`. Earlier versions only had a single bootstrapping commit; semantic-version history starts at v0.1.0.
 
+## v0.2.6 — 2026-05-08
+
+- New `mcp-guard scan ... --output secuaudit-json` mode that emits a payload conforming to the upstream [`oh-my-secuaudit / sec-audit-dast finding_schema.json`](https://github.com/windshock/oh-my-secuaudit/blob/main/skills/runtime/sec-audit-dast/schemas/finding_schema.json). Maps mcp-guard pattern_ids → schema fields: `category` (Command Injection / Prompt Injection / Authentication / Path Traversal / Information Disclosure / SSRF / Misconfiguration / etc.), `cwe_id` (CWE-78 for command_exec, CWE-94 for tool_poisoning, CWE-22 for unrestricted_file_*, CWE-918 for ssrf, …), severity Title-Cased (`HIGH` → `High`), `provenance` derived from scan kind (`path|config` → `source-confirmed`, `endpoint` → `runtime-confirmed`). `metadata.source_modules` falls back to a non-empty value (path basename / endpoint host / mcpServers names) so the schema's `minItems: 1` requirement holds even for clean baselines and inline JSON. Validated end-to-end against the upstream schema across all 11 unknown-lab config fixtures.
+- `--auto-all` returns exit 2 if combined with `--output secuaudit-json` — the schema requires a single task object, so bulk scans should be invoked per-target.
+- New tests: `guard.tests.test_export_secuaudit` (10) covers regex compliance, severity case mapping, source_modules fallbacks, runtime_verification handoff, and summary counting. Total suite now at 63 tests.
+
 ## v0.2.5 — 2026-05-08
 
 - Lab: added Invariant/Snyk `mcp-scan` (legacy `mcp-scan` PyPI package now redirects to `snyk-agent-scan`) as a third external scanner. Two new stages in `runner/run-scans.sh` — live SSE mode against the 11 lab servers, and config mode against the OX research supply-chain corpus. Both stages require `SNYK_TOKEN` (loaded from `.env`); without it the runner records `skipped` results so the report shows the dependency explicitly instead of silent zeros.

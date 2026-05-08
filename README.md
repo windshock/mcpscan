@@ -68,6 +68,16 @@ Full source/config tables + version-pair deltas + scanner overlap matrix in [`re
 
 [`lab/unknown/runtime/upsonic-cve-2026-30625/`](lab/unknown/runtime/upsonic-cve-2026-30625/) is a self-contained PoC project (structure follows the [`oh-my-secuaudit / security-testing-as-code`](https://github.com/windshock/oh-my-secuaudit/tree/main/skills/methodology/security-testing-as-code) skill). Its `exploit.py` AST-extracts `prepare_command()` from the Upsonic source tree and feeds each fixture through it — `evidence/run.txt` captures the result: **6/6 sanitizer_bypass fixtures ACCEPTED on Upsonic 0.72.0**, confirming that the static-scanner BLOCKs in `unknown-lab.md` correspond to payloads the actual sanitizer lets through. Run `python3 lab/unknown/runtime/upsonic-cve-2026-30625/exploit.py` (or the bundled Dockerfile) to reproduce.
 
+### Hand-off to oh-my-secuaudit (`--output secuaudit-json`)
+
+`mcp-guard scan` can emit findings in [oh-my-secuaudit's `finding_schema.json`](https://github.com/windshock/oh-my-secuaudit/blob/main/skills/runtime/sec-audit-dast/schemas/finding_schema.json) shape so the output drops straight into the `security-testing-as-code` skill's project structure (or any consumer of that schema):
+
+```bash
+mcp-guard scan --config ./mcp.json --output secuaudit-json > findings.json
+```
+
+Severity is Title-Cased (`Critical/High/Medium/Low/Info`), category is mapped to OWASP-flavoured taxonomy (Command Injection / Prompt Injection / Path Traversal / SSRF / etc.), `cwe_id` is attached for known patterns, and `metadata.runtime_verification` carries the pointer back to the skill repo so the downstream consumer knows which PoC project structure to instantiate. Validated end-to-end against the upstream schema; the policy engine's BLOCK verdict still drives exit-code `1` so the same command works in CI.
+
 ## Threat Models
 
 `mcp-guard`, `cisco-mcp-scanner`, and Invariant/Snyk `mcp-scan` are complementary, not redundant — see [docs/threat-models.md](docs/threat-models.md) for the full discussion.

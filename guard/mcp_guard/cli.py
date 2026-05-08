@@ -68,7 +68,12 @@ def main():
     )
     scan_parser.add_argument("--policy", help="Path to custom policy YAML file")
     scan_parser.add_argument("--env", default="production", choices=["production", "development"], help="Target environment")
-    scan_parser.add_argument("--output", "-o", choices=["text", "json"], default="text", help="Output format")
+    scan_parser.add_argument(
+        "--output", "-o",
+        choices=["text", "json", "secuaudit-json"],
+        default="text",
+        help="Output format. 'secuaudit-json' emits oh-my-secuaudit finding_schema.json-compliant JSON ready to pipe into the security-testing-as-code skill.",
+    )
     scan_parser.add_argument(
         "--with-cisco",
         action="store_true",
@@ -133,8 +138,9 @@ def _handle_scan(args):
     elif args.config:
         config_str = args.config
         if config_str.startswith("{") or config_str.startswith("["):
-            pass  # inline JSON
+            target_value = "inline_json"  # short label for downstream consumers
         else:
+            target_value = config_str  # treat as file path label
             try:
                 with open(config_str) as f:
                     config_str = f.read()
@@ -143,7 +149,6 @@ def _handle_scan(args):
         _logger.info("scanning config (%d bytes)", len(config_str))
         scan_result = scan_config(config_str)
         target_kind = "config"
-        target_value = config_str
     elif args.endpoint:
         _logger.info("scanning endpoint: %s", args.endpoint)
         scan_result = scan_endpoint(args.endpoint)
@@ -187,7 +192,15 @@ def _handle_scan(args):
 
     evaluation = policy_engine.evaluate(scan_result, environment=args.env)
 
-    if args.output == "json":
+    if args.output == "secuaudit-json":
+        from .export_secuaudit import emit_secuaudit_json
+        emit_secuaudit_json(
+            scan_result,
+            evaluation,
+            target_kind=target_kind,
+            target_value=target_value,
+        )
+    elif args.output == "json":
         # Add policy_verdict to scan result for normalization
         scan_result["policy_verdict"] = evaluation["overall_verdict"]
         scan_result["findings"] = scan_result.get("findings", [])
@@ -253,6 +266,17 @@ def _handle_auto_all(args, policy_engine):
     failure entries but do not abort the loop. Exit code is 1 if any target
     evaluates to BLOCK; 0 otherwise.
     """
+    if args.output == "secuaudit-json":
+        # The downstream finding_schema requires a single task object. For
+        # bulk scans, point the user at per-target invocation instead of
+        # silently collapsing all findings into one task_id.
+        print(
+            "secuaudit-json output is per-target; use a single --endpoint / "
+            "--path / --config target instead of --auto-all.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
     try:
         discovery = discover_targets()
     except RuntimeError as exc:
