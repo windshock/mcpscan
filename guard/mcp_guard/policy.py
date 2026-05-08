@@ -212,6 +212,37 @@ class PolicyEngine:
                     "recommendation": pattern["recommendation"],
                 })
 
+        # Patterns whose claim ("this config/path can cause execution") can be
+        # independently confirmed by exercising the target framework's actual
+        # sanitizer/launcher path with a runtime PoC. When any of these fire
+        # we point the operator at the oh-my-secuaudit
+        # security-testing-as-code skill, which packages the runtime check as
+        # a reproducible project (see lab/unknown/runtime/ for the template).
+        runtime_verifiable_patterns = {
+            "command_exec",
+            "allowlist_bypass",
+            "command_exec_via_args",
+            "config_to_execution",
+            "remote_config_loading",
+            "tool_poisoning",
+            "runtime_only_danger",
+            "conditional_command_exec",
+        }
+        runtime_verification: list[dict] = []
+        fired = {v.get("pattern") for v in verdicts}
+        if fired & runtime_verifiable_patterns:
+            runtime_verification.append({
+                "skill": "oh-my-secuaudit / security-testing-as-code",
+                "url": "https://github.com/windshock/oh-my-secuaudit/tree/main/skills/methodology/security-testing-as-code",
+                "purpose": (
+                    "Confirm whether the target MCP client/host actually accepts "
+                    "this payload by exercising its real sanitizer or launcher "
+                    "path. The skill packages the runtime check as a reproducible "
+                    "PoC project (exploit, README, Dockerfile, evidence)."
+                ),
+                "example": "lab/unknown/runtime/upsonic-cve-2026-30625/ (CVE-2026-30625, prepare_command runtime check)",
+            })
+
         return {
             "target": scan_result.get("target", "unknown"),
             "risk": scan_result.get("risk", "NONE"),
@@ -219,6 +250,7 @@ class PolicyEngine:
             "environment": environment,
             "verdicts": verdicts,
             "recommendations": recommendations,
+            "runtime_verification": runtime_verification,
         }
 
     def _compute_overall_verdict(self, verdicts: list) -> str:
@@ -277,5 +309,15 @@ class PolicyEngine:
                     continue
                 seen.add(key)
                 lines.append(f"  → {r['pattern']}: {r['recommendation']}")
+
+        if evaluation.get("runtime_verification"):
+            lines.append("")
+            lines.append("Runtime verification:")
+            for hint in evaluation["runtime_verification"]:
+                lines.append(f"  → Use {hint['skill']}")
+                lines.append(f"    {hint['url']}")
+                lines.append(f"    {hint['purpose']}")
+                if hint.get("example"):
+                    lines.append(f"    Example: {hint['example']}")
 
         return "\n".join(lines).rstrip()
