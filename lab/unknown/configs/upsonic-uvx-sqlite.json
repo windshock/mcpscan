@@ -1,0 +1,14 @@
+{
+  "_source": "https://docs.upsonic.ai/concepts/tools/mcp-tools/overview",
+  "_note": "Upsonic stores its config as a single command string (MCPHandler(command=\"uvx mcp-server-sqlite --db-path /tmp/db.db\")). We render it here in mcp.json shape so cisco-config / invariant / mcp-guard --config can consume it.",
+  "mcpServers": {
+    "sqlite_via_uvx": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/tmp/db.db"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "_source": "https://docs.flowiseai.com/tutorials/tools-and-mcp#mcp",
+  "_note": "Verbatim Flowise stdio + docker example — runs sequential-thinking inside an mcp/sequentialthinking image.",
+  "mcpServers": {
+    "sequential_thinking_docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mcp/sequentialthinking"
+      ]
+    }
+  }
+}

@@ -39,7 +39,7 @@ The TypeScript lab servers (`vuln-network`, `vuln-allowlist-bypass`) ship an old
 
 ## Unknown-Lab (blind test on real releases)
 
-A second corpus that scans unmodified upstream releases without pre-labelled expected findings — Flowise 3.1.0 / 3.0.13 (npm) and Upsonic 0.72.0 / 0.71.6 (PyPI). Source-only because neither package exposes a native MCP server CLI in these versions (Flowise is an AI workflow platform, Upsonic is an MCP *client* SDK). Bring up with `bash lab/unknown/fetch.sh` before invoking the runner.
+A second corpus that scans unmodified upstream releases without pre-labelled expected findings — Flowise 3.1.0 / 3.0.13 (npm) and Upsonic 0.72.0 / 0.71.6 (PyPI). It has two modes: source scans of the shipped packages, and config-mode scans of honest MCP configs rendered from the Flowise Custom MCP docs and Upsonic MCPHandler/MultiMCPHandler docs. Live endpoint scanning is not applicable because Flowise is an MCP host/client and Upsonic is an MCP client SDK in these releases. Bring up the source fixtures with `bash lab/unknown/fetch.sh` before invoking the runner.
 
 | Package | mcp-guard verdict | mcp-guard findings | MCPScan rules |
 |---|---|---|---|
@@ -48,12 +48,21 @@ A second corpus that scans unmodified upstream releases without pre-labelled exp
 | upsonic-0.71.6 | BLOCK | 7 patterns | 60 hits across 2 rules |
 | upsonic-0.72.0 | BLOCK | 7 patterns | 64 hits across 2 rules |
 
+Config-mode fixtures cover two categories: **sanitizer_bypass** (5 patterns from CVE-2026-40933 / CVE-2026-30625 — `npx -c curl`, `python -c "import os; ..."`, `node -e "require('child_process')..."`, `git -c core.pager=...`, `uvx --from <evil>`) and **honest_baseline** (5 docs-recommended configs).
+
+| Category | mcp-guard | Cisco config (yara) | Invariant/Snyk config |
+|---|---|---|---|
+| sanitizer_bypass (5) | 5/5 BLOCK ✅ | 0/5 — | 0/5 — |
+| honest_baseline (5) | 4/5 BLOCK (FP) | 0/5 — | 1–2/5 (FP) |
+
+mcp-guard is the only scanner that catches the CVE-grade sanitizer bypasses, but its config-mode policy is too coarse — it also flags 4 of 5 honest baselines (any local stdio command in mcp.json gets `allowlist_bypass`/`config_to_execution`). cisco-yara and Invariant/Snyk both let the bypass patterns through.
+
 Two observations from the blind run:
 
 1. **Zero version-pair delta.** Both scanners produce identical output for the older and newer release of each package. Whatever security fix landed between 3.0.13→3.1.0 / 0.71.6→0.72.0, neither tool's coarse pattern-set surfaces it.
 2. **Zero scanner overlap.** mcp-guard and MCPScan have completely disjoint taxonomies (`command_exec` / `unrestricted_file_read` vs `detect-command-execution` / `detect-hardcoded-secrets-py`) — they're complementary rather than redundant.
 
-Full table + version-pair deltas + scanner overlap matrix in [`results/report/unknown-lab.md`](results/report/unknown-lab.md).
+Full source/config tables + version-pair deltas + scanner overlap matrix in [`results/report/unknown-lab.md`](results/report/unknown-lab.md).
 
 ## Threat Models
 

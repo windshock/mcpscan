@@ -871,6 +871,157 @@ def _generate_cisco_config_report(results: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def generate_unknown_lab_config_outputs(results_dir: Path) -> list[dict[str, Any]]:
+    """Normalize unknown-lab config-mode scans (Flowise/Upsonic docs configs).
+
+    Each fixture is a canonical, honest mcp.json straight from upstream docs.
+    We record what each scanner says about it so the report can distinguish
+    malicious-config detections from friction on real-world paste targets.
+    """
+    raw_root = results_dir / "raw"
+    norm_dir = results_dir / "normalized" / "unknown-config"
+    report_dir = results_dir / "report"
+
+    scanners = [
+        ("unknown-mcp-guard-config", "mcp-guard"),
+        ("unknown-cisco-config", "cisco"),
+        ("unknown-invariant-config", "invariant"),
+    ]
+
+    discovered: dict[str, dict[str, Any]] = {}
+    for raw_subdir, label in scanners:
+        scanner_dir = raw_root / raw_subdir
+        if not scanner_dir.exists():
+            continue
+        for raw_file in sorted(scanner_dir.glob("*.json")):
+            cfg_name = raw_file.stem
+            raw, raw_error = load_json_payload(raw_file)
+            entry = discovered.setdefault(cfg_name, {})
+
+            if raw_error:
+                entry[label] = {"status": "failed", "error": raw_error, "findings": []}
+                continue
+
+            if label == "mcp-guard":
+                if isinstance(raw, dict):
+                    findings = [f for f in (raw.get("findings") or []) if isinstance(f, str)]
+                    entry[label] = {
+                        "status": str(raw.get("status", "success")),
+                        "findings": findings,
+                        "policy_verdict": raw.get("policy_verdict"),
+                    }
+                elif isinstance(raw, dict) and raw.get("status") == "skipped":
+                    entry[label] = {"status": "skipped", "findings": []}
+                else:
+                    entry[label] = {"status": "failed", "findings": []}
+            elif label == "cisco":
+                findings = []
+                if isinstance(raw, dict):
+                    status = str(raw.get("status", "success"))
+                    if status == "failed":
+                        entry[label] = {
+                            "status": "failed",
+                            "findings": [],
+                            "error": raw.get("error") or raw.get("reason"),
+                        }
+                        continue
+                    if raw.get("status") == "skipped":
+                        entry[label] = {
+                            "status": "skipped",
+                            "findings": [],
+                            "reason": raw.get("reason") or raw.get("error"),
+                        }
+                        continue
+                    for tool_result in raw.get("scan_results") or []:
+                        if not isinstance(tool_result, dict) or tool_result.get("is_safe", True):
+                            continue
+                        for analyzer_data in (tool_result.get("findings") or {}).values():
+                            if not isinstance(analyzer_data, dict):
+                                continue
+                            for threat in analyzer_data.get("threat_names") or []:
+                                findings.append(_map_cisco_threat(str(threat)))
+                entry[label] = {"status": "success", "findings": findings}
+            elif label == "invariant":
+                findings = []
+                if isinstance(raw, dict):
+                    status = str(raw.get("status", "success"))
+                    if status == "failed":
+                        entry[label] = {
+                            "status": "failed",
+                            "findings": [],
+                            "error": raw.get("error") or raw.get("reason"),
+                        }
+                        continue
+                    if raw.get("status") == "skipped":
+                        entry[label] = {
+                            "status": "skipped",
+                            "findings": [],
+                            "reason": raw.get("reason") or raw.get("error"),
+                        }
+                        continue
+                    for key, payload in raw.items():
+                        if not isinstance(payload, dict) or key.startswith("scan_"):
+                            continue
+                        for issue in payload.get("issues") or []:
+                            if not isinstance(issue, dict):
+                                continue
+                            code = str(issue.get("code", ""))
+                            evidence = str((issue.get("extra_data") or {}).get("evidence", ""))
+                            mapped = _map_invariant_issue(code, evidence)
+                            if mapped:
+                                findings.append(mapped)
+                entry[label] = {"status": "success", "findings": findings}
+
+    if not discovered:
+        return []
+
+    norm_dir.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    # Tag each fixture by category so the report can split the table:
+    #   - sanitizer_bypass: CVE-2026-40933 / CVE-2026-30625 patterns (npx -c,
+    #     python -c, node -e, git -c core.pager=, uvx --from). A scanner that
+    #     misses these is letting a known supply-chain RCE through.
+    #   - honest_baseline: docs-recommended configs. A scanner firing here is
+    #     flagging a config users will paste straight from upstream docs.
+    config_dir = Path("/unknown-configs")
+    if not config_dir.exists():
+        config_dir = results_dir.parent / "lab" / "unknown" / "configs"
+
+    def _category_for(cfg_name: str) -> str:
+        fixture = config_dir / f"{cfg_name}.json"
+        if fixture.is_file():
+            try:
+                payload = json.loads(fixture.read_text())
+            except json.JSONDecodeError:
+                payload = {}
+            if payload.get("_cve"):
+                return "sanitizer_bypass"
+        return "honest_baseline"
+
+    normalized: list[dict[str, Any]] = []
+    for cfg_name in sorted(discovered):
+        category = _category_for(cfg_name)
+        entry = {"config": cfg_name, "category": category, "scanners": discovered[cfg_name]}
+
+        # Surface the CVE id so the report can cite it.
+        fixture = config_dir / f"{cfg_name}.json"
+        if fixture.is_file():
+            try:
+                payload = json.loads(fixture.read_text())
+                if payload.get("_cve"):
+                    entry["cve"] = payload["_cve"]
+            except json.JSONDecodeError:
+                pass
+
+        normalized.append(entry)
+        with open(norm_dir / f"{cfg_name}.json", "w") as f:
+            json.dump(entry, f, indent=2)
+            f.write("\n")
+
+    return normalized
+
+
 def generate_unknown_lab_outputs(results_dir: Path) -> list[dict[str, Any]]:
     """Normalize unknown-lab source scans (blind comparison on real releases).
 
@@ -959,14 +1110,19 @@ def generate_unknown_lab_outputs(results_dir: Path) -> list[dict[str, Any]]:
             json.dump(entry, f, indent=2)
             f.write("\n")
 
-    report = _generate_unknown_lab_report(normalized)
+    config_normalized = generate_unknown_lab_config_outputs(results_dir)
+
+    report = _generate_unknown_lab_report(normalized, config_normalized)
     with open(report_dir / "unknown-lab.md", "w") as f:
         f.write(report)
 
     return normalized
 
 
-def _generate_unknown_lab_report(results: list[dict[str, Any]]) -> str:
+def _generate_unknown_lab_report(
+    results: list[dict[str, Any]],
+    config_results: list[dict[str, Any]] | None = None,
+) -> str:
     lines = ["# Unknown-Lab: Blind comparison on real released packages\n"]
     lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}\n")
     lines.append(
@@ -975,16 +1131,22 @@ def _generate_unknown_lab_report(results: list[dict[str, Any]]) -> str:
         "version pairs (e.g. before vs after a security fix).\n"
     )
     lines.append(
-        "**Why source-mode only**: the chosen packages (Flowise 3.0.13/3.1.0, Upsonic 0.71.6/0.72.0) "
-        "do not expose a native \"run as an MCP server\" CLI in these releases — Flowise is an AI "
-        "workflow platform and Upsonic is an MCP *client* SDK that consumes external MCP servers. "
-        "There is therefore no live SSE/stdio endpoint to point cisco-remote / invariant-scan / "
-        "mcp-guard --endpoint at, and no honest mcpServers config to feed cisco-config / "
-        "invariant-config / mcp-guard --config. The OX research corpus's `flowise_attack` and "
-        "`upsonic_attack` cases (in `cisco-config` / `invariant-config` reports) cover the "
-        "config-to-execution supply-chain *attack* pattern against these names; this section "
-        "covers the orthogonal axis — **what does each scanner detect when looking at the actual "
-        "shipped source code?**\n"
+        "**Two scan modes covered**: (i) *source* — scan the actual shipped source tree; "
+        "(ii) *config* — scan two categories of MCP configs: docs-recommended honest baselines "
+        "(FP-rate probes) and CVE-2026-40933 / CVE-2026-30625 sanitizer-bypass patterns from the "
+        "[OX research blog](https://www.ox.security/blog/flowise-cve-2026-40933-upsonic-cve-2026-30625-what-to-do-when-best-practice-isnt-enough/). "
+        "The bypass pattern is `<allowed_cmd> <innocent-looking-arg> <attacker-controlled-payload>` "
+        "(e.g. `npx -c curl ...`, `python -c \"import os; ...\"`, `git -c core.pager=...`) — the "
+        "Flowise/Upsonic input sanitizer accepts it because the leading binary is in the allowlist "
+        "and the argument string contains no `&|>` shell metacharacters, but the binary itself "
+        "interprets the next argument and runs arbitrary code.\n"
+    )
+    lines.append(
+        "Live-launch is intentionally not run here: Flowise (MCP *host/client*) and Upsonic "
+        "(MCP *client* SDK) do not expose their own tools as MCP servers, so there's no SSE/stdio "
+        "endpoint to probe. A higher-fidelity reproduction would stand up Flowise/Upsonic instances "
+        "and submit each bypass config through their MCP-server-add UI/API — that's a separate "
+        "lab tier we can build out next.\n"
     )
 
     # ── Per-package findings ───────────────────────
@@ -1040,7 +1202,78 @@ def _generate_unknown_lab_report(results: list[dict[str, Any]]) -> str:
         )
     lines.append("")
 
+    # ── Config-mode fixture scans ──────────────────
+    lines.append("## Config-mode fixture scans\n")
+    lines.append(
+        "Two fixture categories: **sanitizer_bypass** are CVE-2026-40933 / CVE-2026-30625 patterns "
+        "from the OX research blog — the canonical Flowise/Upsonic command-input sanitizer treats "
+        "them as safe (allowed command + no blocked special character) but the runtime interprets a "
+        "subsequent argument and executes arbitrary code. A scanner that misses these is letting a "
+        "known supply-chain RCE through. **honest_baseline** are non-malicious configs straight from "
+        "the Flowise / Upsonic docs — flags here are scanner false positives against real-world paste "
+        "targets.\n"
+    )
+    if not config_results:
+        lines.append("No config-mode raw results were found yet.")
+        lines.append("")
+    else:
+        bypass_rows = [r for r in config_results if r.get("category") == "sanitizer_bypass"]
+        honest_rows = [r for r in config_results if r.get("category") != "sanitizer_bypass"]
+
+        if bypass_rows:
+            lines.append("### sanitizer_bypass — CVE-grade exploit configs\n")
+            lines.append("| Config fixture | CVE | mcp-guard | Cisco config | Invariant/Snyk config |")
+            lines.append("|---|---|---|---|---|")
+            for r in bypass_rows:
+                scanners = r.get("scanners", {})
+                lines.append(
+                    "| {config} | {cve} | {guard} | {cisco} | {invariant} |".format(
+                        config=r.get("config", "unknown"),
+                        cve=r.get("cve", "—"),
+                        guard=_format_unknown_config_cell(scanners.get("mcp-guard", {}), include_verdict=True),
+                        cisco=_format_unknown_config_cell(scanners.get("cisco", {})),
+                        invariant=_format_unknown_config_cell(scanners.get("invariant", {})),
+                    )
+                )
+            lines.append("")
+
+        if honest_rows:
+            lines.append("### honest_baseline — docs-recommended configs (FP-rate probe)\n")
+            lines.append("| Config fixture | mcp-guard | Cisco config | Invariant/Snyk config |")
+            lines.append("|---|---|---|---|")
+            for r in honest_rows:
+                scanners = r.get("scanners", {})
+                lines.append(
+                    "| {config} | {guard} | {cisco} | {invariant} |".format(
+                        config=r.get("config", "unknown"),
+                        guard=_format_unknown_config_cell(scanners.get("mcp-guard", {}), include_verdict=True),
+                        cisco=_format_unknown_config_cell(scanners.get("cisco", {})),
+                        invariant=_format_unknown_config_cell(scanners.get("invariant", {})),
+                    )
+                )
+            lines.append("")
+
     return "\n".join(lines)
+
+
+def _format_unknown_config_cell(scanner: dict[str, Any], *, include_verdict: bool = False) -> str:
+    if not scanner:
+        return "not run"
+
+    status = str(scanner.get("status", "success"))
+    findings = sorted(set(scanner.get("findings") or []))
+    finding_text = ", ".join(findings) if findings else "—"
+
+    if status == "skipped":
+        reason = scanner.get("reason") or scanner.get("error")
+        return f"skipped ({reason})" if reason else "skipped"
+    if status == "failed":
+        error = scanner.get("error") or scanner.get("reason")
+        return f"failed ({error})" if error else "failed"
+
+    if include_verdict and scanner.get("policy_verdict"):
+        return f"{scanner['policy_verdict']}: {finding_text}"
+    return finding_text
 
 
 def _findings_for(entry: dict[str, Any], scanner_label: str) -> list[str]:

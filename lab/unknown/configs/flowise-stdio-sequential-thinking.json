@@ -1,0 +1,13 @@
+{
+  "_source": "https://docs.flowiseai.com/tutorials/tools-and-mcp#mcp",
+  "_note": "Verbatim Flowise stdio example — sequential-thinking via npx. An honest, docs-recommended config.",
+  "mcpServers": {
+    "sequential_thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    }
+  }
+}

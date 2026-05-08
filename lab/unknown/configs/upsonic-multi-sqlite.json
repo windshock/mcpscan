@@ -1,0 +1,22 @@
+{
+  "_source": "https://docs.upsonic.ai/concepts/tools/mcp-tools/overview",
+  "_note": "Upsonic MultiMCPHandler example — two sqlite MCP servers with name prefixes. Rendered as mcp.json.",
+  "mcpServers": {
+    "users_db": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/tmp/db1.db"
+      ]
+    },
+    "products_db": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "/tmp/db2.db"
+      ]
+    }
+  }
+}

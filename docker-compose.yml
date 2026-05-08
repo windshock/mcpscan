@@ -287,6 +287,7 @@ services:
     volumes:
       - ./servers:/servers:ro
       - ./lab/unknown/sources:/unknown:ro
+      - ./lab/unknown/configs:/unknown-configs:ro
       - ./results:/results
 
   ox-live-runner:

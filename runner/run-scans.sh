@@ -37,15 +37,21 @@ try:
     json.loads(text)
 except json.JSONDecodeError:
     # Some scanners (cisco mcp-scanner on certain cases) print a banner line
-    # or trailing diagnostic after the JSON payload. Try to recover the
-    # outermost JSON object so downstream normalization still runs.
-    start = text.find("{")
-    end = text.rfind("}")
-    if start == -1 or end <= start:
+    # or trailing diagnostic after the JSON payload. Decode the first complete
+    # JSON value instead of slicing to the last brace; a few tools append a
+    # second partial JSON tail, which makes outermost slicing invalid.
+    decoder = json.JSONDecoder()
+    for start, char in enumerate(text):
+        if char not in "{[":
+            continue
+        try:
+            payload, _ = decoder.raw_decode(text[start:])
+        except json.JSONDecodeError:
+            continue
+        path.write_text(json.dumps(payload, indent=2) + "\n")
+        break
+    else:
         raise SystemExit(1)
-    snippet = text[start : end + 1]
-    json.loads(snippet)
-    path.write_text(snippet)
 PY
 }
 
@@ -200,7 +206,7 @@ require_command mcpscan
 require_command mcp-guard
 require_command snyk-agent-scan
 
-mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$RAW_DIR/invariant-scan" "$RAW_DIR/invariant-config" "$RAW_DIR/unknown-mcpscan" "$RAW_DIR/unknown-mcp-guard" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
+mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$RAW_DIR/invariant-scan" "$RAW_DIR/invariant-config" "$RAW_DIR/unknown-mcpscan" "$RAW_DIR/unknown-mcp-guard" "$RAW_DIR/unknown-cisco-config" "$RAW_DIR/unknown-invariant-config" "$RAW_DIR/unknown-mcp-guard-config" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
 
 echo "=========================================="
 echo " MCP Security Lab — Scanner Runner"
@@ -426,7 +432,46 @@ if [[ -d /unknown ]]; then
   fi
 else
   echo ""
-  echo ">>> Skipping unknown-lab stage (/unknown not mounted; run lab/unknown/fetch.sh)"
+  echo ">>> Skipping unknown-lab source stage (/unknown not mounted; run lab/unknown/fetch.sh)"
+fi
+
+# ── Unknown-lab config-mode (canonical mcp.json from Flowise/Upsonic docs) ──
+# Flowise (host/client) and Upsonic (client) consume MCP configs that users
+# paste from their docs. We treat each canonical example as a fixture and run
+# all three config-mode scanners against it. None of these examples are
+# malicious. Cisco config-mode and Snyk's config scan may launch stdio servers
+# to enumerate tools, so this is lab-only and uses docs-derived fixtures.
+if [[ -d /unknown-configs ]]; then
+  uconfigs=( /unknown-configs/*.json )
+  if [[ ${#uconfigs[@]} -gt 0 ]] && [[ -f "${uconfigs[0]}" ]]; then
+    echo ""
+    echo ">>> Running unknown-lab config-mode scans (${#uconfigs[@]} configs)"
+    for cfg in "${uconfigs[@]}"; do
+      cfg_name="$(basename "$cfg" .json)"
+      echo "  Scanning $cfg_name with mcp-guard --config..."
+      run_stdout_scanner_json "unknown-mcp-guard-config" "$cfg_name" "$cfg" \
+        "$RAW_DIR/unknown-mcp-guard-config/${cfg_name}.json" "0 1" \
+        mcp-guard scan --config "$cfg" --output json
+
+      echo "  Scanning $cfg_name with cisco config..."
+      run_stdout_scanner_json "unknown-cisco-config" "$cfg_name" "$cfg" \
+        "$RAW_DIR/unknown-cisco-config/${cfg_name}.json" "0 1" \
+        mcp-scanner --analyzers yara --format raw --log-level error \
+          config --config-path "$cfg"
+
+      if [[ -n "${SNYK_TOKEN:-}" ]]; then
+        echo "  Scanning $cfg_name with snyk-agent-scan..."
+        run_stdout_scanner_json "unknown-invariant-config" "$cfg_name" "$cfg" \
+          "$RAW_DIR/unknown-invariant-config/${cfg_name}.json" "0 1 2" \
+          snyk-agent-scan scan --json --dangerously-run-mcp-servers \
+            --suppress-mcpserver-io true --server-timeout 15 "$cfg"
+      else
+        write_result_json "$RAW_DIR/unknown-invariant-config/${cfg_name}.json" \
+          "unknown-invariant-config" "$cfg_name" "$cfg" "skipped" \
+          "SNYK_TOKEN unset" "-" "" ""
+      fi
+    done
+  fi
 fi
 
 # ── Normalize & Report ───────────────────────────

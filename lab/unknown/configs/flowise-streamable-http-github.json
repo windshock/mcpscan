@@ -1,0 +1,13 @@
+{
+  "_source": "https://docs.flowiseai.com/tutorials/tools-and-mcp#mcp",
+  "_note": "Verbatim Flowise streamable-HTTP example — GitHub Copilot MCP via Bearer token.",
+  "mcpServers": {
+    "github_copilot": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer {{$vars.githubPAT}}"
+      }
+    }
+  }
+}
