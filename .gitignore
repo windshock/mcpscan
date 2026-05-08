@@ -19,6 +19,9 @@ results/workdir/
 results/**/*.tmp.*
 *.log
 
+# Unknown-lab source trees are downloaded by lab/unknown/fetch.sh
+lab/unknown/sources/
+
 # Editor / OS
 .DS_Store
 .idea/

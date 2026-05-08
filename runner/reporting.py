@@ -871,6 +871,211 @@ def _generate_cisco_config_report(results: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def generate_unknown_lab_outputs(results_dir: Path) -> list[dict[str, Any]]:
+    """Normalize unknown-lab source scans (blind comparison on real releases).
+
+    No expected_findings — we record what each scanner detected per package
+    version, then surface deltas (between scanners and between fix-before vs
+    fix-after versions) in `results/report/unknown-lab.md`.
+    """
+    raw_root = results_dir / "raw"
+    norm_dir = results_dir / "normalized" / "unknown-lab"
+    report_dir = results_dir / "report"
+
+    scanners = [
+        ("unknown-mcp-guard", "mcp-guard"),
+        ("unknown-mcpscan", "mcpscan"),
+    ]
+
+    discovered: dict[str, dict[str, Any]] = {}
+    for raw_subdir, scanner_label in scanners:
+        scanner_dir = raw_root / raw_subdir
+        if not scanner_dir.exists():
+            continue
+        for raw_file in sorted(scanner_dir.glob("*.json")):
+            pkg = raw_file.stem
+            raw, raw_error = load_json_payload(raw_file)
+            entry = discovered.setdefault(pkg, {})
+
+            if raw_error:
+                entry[scanner_label] = {
+                    "status": "failed",
+                    "error": raw_error,
+                    "findings": [],
+                }
+                continue
+
+            if scanner_label == "mcp-guard":
+                if isinstance(raw, dict):
+                    findings = [f for f in (raw.get("findings") or []) if isinstance(f, str)]
+                    entry[scanner_label] = {
+                        "status": str(raw.get("status", "success")),
+                        "findings": findings,
+                        "policy_verdict": raw.get("policy_verdict"),
+                        "risk_level": raw.get("risk_level"),
+                    }
+                else:
+                    entry[scanner_label] = {
+                        "status": "failed",
+                        "error": "unexpected JSON shape (expected dict)",
+                        "findings": [],
+                    }
+            elif scanner_label == "mcpscan":
+                # MCPScan emits a bare JSON array of finding dicts directly
+                # (one per (file, rule_id) pair). Empty array = no findings.
+                rule_ids: list[str] = []
+                if isinstance(raw, list):
+                    for r in raw:
+                        if isinstance(r, dict) and r.get("rule_id"):
+                            rule_ids.append(str(r["rule_id"]))
+                elif isinstance(raw, dict):
+                    for r in (raw.get("taint_results") or raw.get("findings") or []):
+                        if isinstance(r, dict) and r.get("rule_id"):
+                            rule_ids.append(str(r["rule_id"]))
+                # Collapse `opt.mcpscan.src.mcpscan.rules.<name>` to just `<name>`
+                # so the report is readable.
+                short = [rid.rsplit(".", 1)[-1] for rid in rule_ids]
+                entry[scanner_label] = {
+                    "status": "success",
+                    "findings": short,
+                    "raw_rule_count": len(short),
+                    "unique_rule_count": len(set(short)),
+                }
+
+    if not discovered:
+        return []
+
+    norm_dir.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    normalized: list[dict[str, Any]] = []
+    for pkg in sorted(discovered):
+        entry = {
+            "package": pkg,
+            "scanners": discovered[pkg],
+        }
+        normalized.append(entry)
+        with open(norm_dir / f"{pkg}.json", "w") as f:
+            json.dump(entry, f, indent=2)
+            f.write("\n")
+
+    report = _generate_unknown_lab_report(normalized)
+    with open(report_dir / "unknown-lab.md", "w") as f:
+        f.write(report)
+
+    return normalized
+
+
+def _generate_unknown_lab_report(results: list[dict[str, Any]]) -> str:
+    lines = ["# Unknown-Lab: Blind comparison on real released packages\n"]
+    lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}\n")
+    lines.append(
+        "This stage scans unmodified upstream releases. There are no `expected_findings` — "
+        "the value is in (a) what each scanner uniquely surfaces, (b) deltas between adjacent "
+        "version pairs (e.g. before vs after a security fix).\n"
+    )
+    lines.append(
+        "**Why source-mode only**: the chosen packages (Flowise 3.0.13/3.1.0, Upsonic 0.71.6/0.72.0) "
+        "do not expose a native \"run as an MCP server\" CLI in these releases — Flowise is an AI "
+        "workflow platform and Upsonic is an MCP *client* SDK that consumes external MCP servers. "
+        "There is therefore no live SSE/stdio endpoint to point cisco-remote / invariant-scan / "
+        "mcp-guard --endpoint at, and no honest mcpServers config to feed cisco-config / "
+        "invariant-config / mcp-guard --config. The OX research corpus's `flowise_attack` and "
+        "`upsonic_attack` cases (in `cisco-config` / `invariant-config` reports) cover the "
+        "config-to-execution supply-chain *attack* pattern against these names; this section "
+        "covers the orthogonal axis — **what does each scanner detect when looking at the actual "
+        "shipped source code?**\n"
+    )
+
+    # ── Per-package findings ───────────────────────
+    lines.append("## Per-package findings\n")
+    lines.append("| Package | mcp-guard verdict | mcp-guard findings | MCPScan rules (count × unique) |")
+    lines.append("|---|---|---|---|")
+    for r in results:
+        guard = r["scanners"].get("mcp-guard", {})
+        mcps = r["scanners"].get("mcpscan", {})
+        verdict = guard.get("policy_verdict") or "—"
+        guard_findings = ", ".join(sorted(set(guard.get("findings") or []))) or "—"
+        mcps_findings_list = mcps.get("findings") or []
+        mcps_unique = sorted(set(mcps_findings_list))
+        if mcps_unique:
+            mcps_findings = f"{len(mcps_findings_list)} hits across {len(mcps_unique)} rules: {', '.join(mcps_unique)}"
+        else:
+            mcps_findings = "—"
+        lines.append(f"| {r['package']} | {verdict} | {guard_findings} | {mcps_findings} |")
+    lines.append("")
+
+    # ── Version-pair deltas ────────────────────────
+    pairs = _pair_unknown_versions(results)
+    if pairs:
+        lines.append("## Version-pair deltas (fix-before → fix-after)\n")
+        lines.append("| Pair | Scanner | Before-only | After-only | Common |")
+        lines.append("|---|---|---|---|---|")
+        for older, newer in pairs:
+            for scanner_label in ("mcp-guard", "mcpscan"):
+                before = set(_findings_for(older, scanner_label))
+                after = set(_findings_for(newer, scanner_label))
+                only_before = sorted(before - after) or ["—"]
+                only_after = sorted(after - before) or ["—"]
+                common = sorted(before & after) or ["—"]
+                lines.append(
+                    f"| {older['package']} → {newer['package']} | {scanner_label} | "
+                    f"{', '.join(only_before)} | {', '.join(only_after)} | "
+                    f"{', '.join(common)} |"
+                )
+        lines.append("")
+
+    # ── Scanner overlap (within each package) ──────
+    lines.append("## Scanner overlap (per package)\n")
+    lines.append("| Package | mcp-guard only | MCPScan only | Both |")
+    lines.append("|---|---|---|---|")
+    for r in results:
+        g = set(_findings_for(r, "mcp-guard"))
+        m = set(_findings_for(r, "mcpscan"))
+        only_g = sorted(g - m) or ["—"]
+        only_m = sorted(m - g) or ["—"]
+        both = sorted(g & m) or ["—"]
+        lines.append(
+            f"| {r['package']} | {', '.join(only_g)} | {', '.join(only_m)} | {', '.join(both)} |"
+        )
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def _findings_for(entry: dict[str, Any], scanner_label: str) -> list[str]:
+    return entry.get("scanners", {}).get(scanner_label, {}).get("findings", []) or []
+
+
+def _pair_unknown_versions(results: list[dict[str, Any]]) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """Group packages by name (e.g. 'flowise', 'upsonic') and return ordered
+    pairs (older, newer) per group when exactly two versions exist."""
+    by_name: dict[str, list[dict[str, Any]]] = {}
+    for r in results:
+        name, _, _ = r["package"].rpartition("-")  # "flowise-3.1.0" → "flowise"
+        if not name:
+            continue
+        by_name.setdefault(name, []).append(r)
+
+    pairs: list[tuple[dict[str, Any], dict[str, Any]]] = []
+    for name, entries in by_name.items():
+        if len(entries) < 2:
+            continue
+        from packaging.version import Version, InvalidVersion
+
+        def _ver(entry: dict[str, Any]) -> Version:
+            ver_str = entry["package"].split("-", 1)[1]
+            try:
+                return Version(ver_str)
+            except InvalidVersion:
+                return Version("0")
+
+        ordered = sorted(entries, key=_ver)
+        for older, newer in zip(ordered, ordered[1:]):
+            pairs.append((older, newer))
+    return pairs
+
+
 def generate_ox_live_outputs(results_dir: Path, expected_file: Path) -> list[dict[str, Any]]:
     raw_dir = results_dir / "raw" / "ox-live"
     norm_dir = results_dir / "normalized" / "ox-live"

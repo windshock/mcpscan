@@ -286,6 +286,7 @@ services:
       - SNYK_TOKEN=${SNYK_TOKEN:-}
     volumes:
       - ./servers:/servers:ro
+      - ./lab/unknown/sources:/unknown:ro
       - ./results:/results
 
   ox-live-runner:

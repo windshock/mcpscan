@@ -37,6 +37,24 @@ The single source-only FN is `authless_endpoint` on `vuln-authless` — a runtim
 
 The TypeScript lab servers (`vuln-network`, `vuln-allowlist-bypass`) ship an older `SSEServerTransport` that the current MCP Python client and Cisco scanner cannot list tools from. The endpoint stage falls back to HTTP probes for them; vuln-hidden-transport is fully covered that way.
 
+## Unknown-Lab (blind test on real releases)
+
+A second corpus that scans unmodified upstream releases without pre-labelled expected findings — Flowise 3.1.0 / 3.0.13 (npm) and Upsonic 0.72.0 / 0.71.6 (PyPI). Source-only because neither package exposes a native MCP server CLI in these versions (Flowise is an AI workflow platform, Upsonic is an MCP *client* SDK). Bring up with `bash lab/unknown/fetch.sh` before invoking the runner.
+
+| Package | mcp-guard verdict | mcp-guard findings | MCPScan rules |
+|---|---|---|---|
+| flowise-3.0.13 | BLOCK | command_exec, unrestricted_file_read | — (Python rules don't fire on JS) |
+| flowise-3.1.0 | BLOCK | command_exec, unrestricted_file_read | — |
+| upsonic-0.71.6 | BLOCK | 7 patterns | 60 hits across 2 rules |
+| upsonic-0.72.0 | BLOCK | 7 patterns | 64 hits across 2 rules |
+
+Two observations from the blind run:
+
+1. **Zero version-pair delta.** Both scanners produce identical output for the older and newer release of each package. Whatever security fix landed between 3.0.13→3.1.0 / 0.71.6→0.72.0, neither tool's coarse pattern-set surfaces it.
+2. **Zero scanner overlap.** mcp-guard and MCPScan have completely disjoint taxonomies (`command_exec` / `unrestricted_file_read` vs `detect-command-execution` / `detect-hardcoded-secrets-py`) — they're complementary rather than redundant.
+
+Full table + version-pair deltas + scanner overlap matrix in [`results/report/unknown-lab.md`](results/report/unknown-lab.md).
+
 ## Threat Models
 
 `mcp-guard`, `cisco-mcp-scanner`, and Invariant/Snyk `mcp-scan` are complementary, not redundant — see [docs/threat-models.md](docs/threat-models.md) for the full discussion.

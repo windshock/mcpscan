@@ -1,6 +1,6 @@
 # MCP Scanner Benchmark Report
 
-Generated: 2026-05-08T00:26:02.052235+00:00
+Generated: 2026-05-08T01:34:52.468840+00:00
 
 
 ## mcpscan

@@ -200,7 +200,7 @@ require_command mcpscan
 require_command mcp-guard
 require_command snyk-agent-scan
 
-mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$RAW_DIR/invariant-scan" "$RAW_DIR/invariant-config" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
+mkdir -p "$RAW_DIR/mcpscan" "$RAW_DIR/cisco-scanner" "$RAW_DIR/mcp-guard" "$RAW_DIR/mcp-guard-endpoint" "$RAW_DIR/cisco-config" "$RAW_DIR/invariant-scan" "$RAW_DIR/invariant-config" "$RAW_DIR/unknown-mcpscan" "$RAW_DIR/unknown-mcp-guard" "$NORM_DIR" "$REPORT_DIR" "$EVIDENCE_DIR"
 
 echo "=========================================="
 echo " MCP Security Lab — Scanner Runner"
@@ -395,6 +395,38 @@ PY
         --server-timeout 15 "$case_file"
   done
   rm -rf "$ox_inv_tmp"
+fi
+
+# ── Unknown lab (real released packages) ─────────
+# Source-mode scan of unmodified npm/PyPI releases. The lab framework does NOT
+# pre-label expected_findings — this is a blind comparison of what each
+# scanner detects on real production code. The fixture lives at
+# lab/unknown/sources/ on the host, mounted at /unknown inside the runner.
+# Bring up with `bash lab/unknown/fetch.sh` before invoking the runner.
+if [[ -d /unknown ]]; then
+  unknown_targets=()
+  for d in /unknown/*/; do
+    [[ -d "$d" ]] || continue
+    unknown_targets+=("$(basename "$d")")
+  done
+
+  if [[ ${#unknown_targets[@]} -gt 0 ]]; then
+    echo ""
+    echo ">>> Running unknown-lab source scans (${#unknown_targets[@]} packages)"
+    for pkg in "${unknown_targets[@]}"; do
+      echo "  Scanning $pkg with mcp-guard..."
+      run_stdout_scanner_json "unknown-mcp-guard" "$pkg" "/unknown/$pkg" \
+        "$RAW_DIR/unknown-mcp-guard/${pkg}.json" "0 1" \
+        mcp-guard scan --path "/unknown/$pkg" --output json
+      echo "  Scanning $pkg with MCPScan..."
+      run_file_scanner_json "unknown-mcpscan" "$pkg" "/unknown/$pkg" \
+        "$RAW_DIR/unknown-mcpscan/${pkg}.json" "0" \
+        mcpscan scan "/unknown/$pkg" --no-monitor-desc --no-monitor-code --save --out
+    done
+  fi
+else
+  echo ""
+  echo ">>> Skipping unknown-lab stage (/unknown not mounted; run lab/unknown/fetch.sh)"
 fi
 
 # ── Normalize & Report ───────────────────────────

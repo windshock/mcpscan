@@ -9,6 +9,7 @@ from reporting import (
     generate_invariant_config_outputs,
     generate_lab_outputs,
     generate_ox_live_outputs,
+    generate_unknown_lab_outputs,
 )
 
 
@@ -39,6 +40,7 @@ def main() -> None:
     fixture_file = _resolve_ox_research_fixture()
     cisco_config_results = generate_cisco_config_outputs(RESULTS_DIR, fixture_file)
     invariant_config_results = generate_invariant_config_outputs(RESULTS_DIR, fixture_file)
+    unknown_lab_results = generate_unknown_lab_outputs(RESULTS_DIR)
 
     print(f"Generated {len(lab_results)} lab normalized results")
     if ox_results:
@@ -47,6 +49,8 @@ def main() -> None:
         print(f"Generated {len(cisco_config_results)} cisco supply-chain results")
     if invariant_config_results:
         print(f"Generated {len(invariant_config_results)} invariant supply-chain results")
+    if unknown_lab_results:
+        print(f"Generated {len(unknown_lab_results)} unknown-lab normalized results")
     print(f"Reports saved to {RESULTS_DIR / 'report'}")
 
 
