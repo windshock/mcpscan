@@ -1,6 +1,6 @@
 # Unknown-Lab: Blind comparison on real released packages
 
-Generated: 2026-05-08T03:10:13.008969+00:00
+Generated: 2026-05-08T03:44:40.093237+00:00
 
 This stage scans unmodified upstream releases. There are no `expected_findings` — the value is in (a) what each scanner uniquely surfaces, (b) deltas between adjacent version pairs (e.g. before vs after a security fix).
 
@@ -43,9 +43,10 @@ Two fixture categories: **sanitizer_bypass** are CVE-2026-40933 / CVE-2026-30625
 
 | Config fixture | CVE | mcp-guard | Cisco config | Invariant/Snyk config |
 |---|---|---|---|---|
-| flowise-bypass-node-e | CVE-2026-40933 | BLOCK: allowlist_bypass, config_to_execution | — | — |
+| flowise-bypass-docker-mount | CVE-2026-40933 | BLOCK: allowlist_bypass, config_to_execution | — | — |
 | flowise-bypass-npx-c | CVE-2026-40933 | BLOCK: allowlist_bypass, config_to_execution | — | — |
-| flowise-bypass-python-c | CVE-2026-40933 | BLOCK: allowlist_bypass, config_to_execution | — | — |
+| flowise-bypass-npx-p | CVE-2026-40933 | BLOCK: allowlist_bypass, config_to_execution | — | — |
+| flowise-bypass-python-m | CVE-2026-40933 | BLOCK: allowlist_bypass, config_to_execution | — | — |
 | upsonic-bypass-git-pager | CVE-2026-30625 | BLOCK: allowlist_bypass, config_to_execution | — | — |
 | upsonic-bypass-uvx-from | CVE-2026-30625 | BLOCK: allowlist_bypass, config_to_execution | — | — |
 

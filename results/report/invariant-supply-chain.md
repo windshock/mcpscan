@@ -1,6 +1,6 @@
 # Invariant/Snyk Supply-Chain Coverage (mcp-scan config mode against OX research corpus)
 
-Generated: 2026-05-08T00:26:02.077461+00:00
+Generated: 2026-05-08T03:44:40.047347+00:00
 
 - **Cases scanned**: 14 (14 succeeded)
 - **True Positives**: 0

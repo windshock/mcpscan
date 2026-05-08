@@ -3,7 +3,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from runner.reporting import generate_lab_outputs, generate_ox_live_outputs, generate_ox_live_report, normalize_ox_live
+from runner.reporting import (
+    generate_lab_outputs,
+    generate_ox_live_outputs,
+    generate_ox_live_report,
+    generate_unknown_lab_outputs,
+    normalize_ox_live,
+)
 
 
 class ReportingTest(unittest.TestCase):
@@ -186,6 +192,63 @@ class ReportingTest(unittest.TestCase):
             combined_section = comparison.split("## mcp-guard combined", 1)[1]
             self.assertIn("Recall**: 100.0%", combined_section)
             self.assertIn("OK **demo**: TP=3 FP=0 FN=0", combined_section)
+
+    def test_generate_unknown_lab_outputs_includes_config_fixtures(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            results_dir = Path(tmpdir) / "results"
+            raw_dir = results_dir / "raw"
+            (raw_dir / "unknown-mcp-guard").mkdir(parents=True)
+            (raw_dir / "unknown-mcpscan").mkdir(parents=True)
+            (raw_dir / "unknown-mcp-guard-config").mkdir(parents=True)
+            (raw_dir / "unknown-cisco-config").mkdir(parents=True)
+            (raw_dir / "unknown-invariant-config").mkdir(parents=True)
+
+            (raw_dir / "unknown-mcp-guard" / "flowise-3.1.0.json").write_text(
+                json.dumps(
+                    {
+                        "status": "success",
+                        "findings": ["command_exec"],
+                        "policy_verdict": "BLOCK",
+                    }
+                )
+            )
+            (raw_dir / "unknown-mcpscan" / "flowise-3.1.0.json").write_text(json.dumps([]))
+            (raw_dir / "unknown-mcp-guard-config" / "flowise-stdio.json").write_text(
+                json.dumps({"findings": ["command_exec"], "policy_verdict": "BLOCK"})
+            )
+            (raw_dir / "unknown-cisco-config" / "flowise-stdio.json").write_text(
+                json.dumps(
+                    {
+                        "scan_results": [
+                            {
+                                "is_safe": False,
+                                "findings": {
+                                    "yara": {
+                                        "severity": "HIGH",
+                                        "threat_names": ["CODE EXECUTION"],
+                                    }
+                                },
+                            }
+                        ]
+                    }
+                )
+            )
+            (raw_dir / "unknown-invariant-config" / "flowise-stdio.json").write_text(
+                json.dumps({"status": "skipped", "reason": "SNYK_TOKEN unset"})
+            )
+
+            generate_unknown_lab_outputs(results_dir)
+
+            config_normalized = json.loads(
+                (results_dir / "normalized" / "unknown-config" / "flowise-stdio.json").read_text()
+            )
+            self.assertEqual(config_normalized["scanners"]["mcp-guard"]["policy_verdict"], "BLOCK")
+            self.assertEqual(config_normalized["scanners"]["cisco"]["findings"], ["command_exec"])
+            self.assertEqual(config_normalized["scanners"]["invariant"]["status"], "skipped")
+
+            report = (results_dir / "report" / "unknown-lab.md").read_text()
+            self.assertIn("## Config-mode fixture scans", report)
+            self.assertIn("| flowise-stdio | BLOCK: command_exec | command_exec | skipped (SNYK_TOKEN unset) |", report)
 
     def test_ox_live_report_distinguishes_fixture_and_live_scans(self):
         normalized = [

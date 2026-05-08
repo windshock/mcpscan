@@ -64,6 +64,10 @@ Two observations from the blind run:
 
 Full source/config tables + version-pair deltas + scanner overlap matrix in [`results/report/unknown-lab.md`](results/report/unknown-lab.md).
 
+### Runtime PoC — independently confirms the bypass
+
+[`lab/unknown/runtime/upsonic-cve-2026-30625/`](lab/unknown/runtime/upsonic-cve-2026-30625/) is a self-contained PoC project (structure follows the [`oh-my-secuaudit / security-testing-as-code`](https://github.com/windshock/oh-my-secuaudit/tree/main/skills/methodology/security-testing-as-code) skill). Its `exploit.py` AST-extracts `prepare_command()` from the Upsonic source tree and feeds each fixture through it — `evidence/run.txt` captures the result: **6/6 sanitizer_bypass fixtures ACCEPTED on Upsonic 0.72.0**, confirming that the static-scanner BLOCKs in `unknown-lab.md` correspond to payloads the actual sanitizer lets through. Run `python3 lab/unknown/runtime/upsonic-cve-2026-30625/exploit.py` (or the bundled Dockerfile) to reproduce.
+
 ## Threat Models
 
 `mcp-guard`, `cisco-mcp-scanner`, and Invariant/Snyk `mcp-scan` are complementary, not redundant — see [docs/threat-models.md](docs/threat-models.md) for the full discussion.
