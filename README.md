@@ -59,7 +59,7 @@ mcp-guard is the only scanner that catches the CVE-grade sanitizer bypasses, but
 
 Two observations from the blind run:
 
-1. **Zero version-pair delta.** Both scanners produce identical output for the older and newer release of each package. Whatever security fix landed between 3.0.13→3.1.0 / 0.71.6→0.72.0, neither tool's coarse pattern-set surfaces it.
+1. **Zero version-pair delta — and that is the correct ground truth.** `diff -u lab/unknown/sources/upsonic-0.71.6/src/upsonic/tools/mcp.py lab/unknown/sources/upsonic-0.72.0/src/upsonic/tools/mcp.py` shows the entire change is a new `_emit_mcp_security_warning()` console print — `prepare_command()` is byte-identical. So the scanners are right to report no difference; any scanner reporting a behavioural fix would be hallucinating one. Same conclusion for Flowise 3.0.13→3.1.0 from the source side. See [`lab/unknown/CVE-NOTES.md`](lab/unknown/CVE-NOTES.md) for the full diff and the `shutil.which` short-circuit that makes the allowlist mostly decorative.
 2. **Zero scanner overlap.** mcp-guard and MCPScan have completely disjoint taxonomies (`command_exec` / `unrestricted_file_read` vs `detect-command-execution` / `detect-hardcoded-secrets-py`) — they're complementary rather than redundant.
 
 Full source/config tables + version-pair deltas + scanner overlap matrix in [`results/report/unknown-lab.md`](results/report/unknown-lab.md).

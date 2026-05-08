@@ -1143,10 +1143,14 @@ def _generate_unknown_lab_report(
     )
     lines.append(
         "Live-launch is intentionally not run here: Flowise (MCP *host/client*) and Upsonic "
-        "(MCP *client* SDK) do not expose their own tools as MCP servers, so there's no SSE/stdio "
-        "endpoint to probe. A higher-fidelity reproduction would stand up Flowise/Upsonic instances "
-        "and submit each bypass config through their MCP-server-add UI/API — that's a separate "
-        "lab tier we can build out next.\n"
+        "(MCP *client* SDK) do not expose their own tools as MCP servers — neither has an SSE "
+        "endpoint to probe. The CVEs are RCEs in their **stdio launcher paths** "
+        "(`MCPHandler.prepare_command` → `StdioServerParameters` → `stdio_client` for Upsonic; "
+        "the canvas-UI Custom MCP form for Flowise). A higher-fidelity reproduction would stand "
+        "up live instances and submit each bypass through the host's submission path — see "
+        "[`lab/unknown/CVE-NOTES.md`](../../lab/unknown/CVE-NOTES.md) for the verified attack "
+        "surface and what actually changed between 0.71.6 → 0.72.0 (`prepare_command` body is "
+        "byte-identical; the only diff is a console warning).\n"
     )
 
     # ── Per-package findings ───────────────────────
